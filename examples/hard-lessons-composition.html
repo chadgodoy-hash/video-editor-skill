@@ -1,0 +1,1358 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Poppins"; font-weight: 600; src: url("assets/fonts/poppins-latin-600-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Poppins"; font-weight: 700; src: url("assets/fonts/poppins-latin-700-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Poppins"; font-weight: 800; src: url("assets/fonts/poppins-latin-800-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Gochi Hand"; font-weight: 400; src: url("assets/fonts/gochi-hand-latin-400-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Montserrat"; font-weight: 500; src: url("assets/fonts/montserrat-latin-500-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Montserrat"; font-weight: 600; src: url("assets/fonts/montserrat-latin-600-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Montserrat"; font-weight: 700; src: url("assets/fonts/montserrat-latin-700-normal.woff2") format("woff2"); }
+
+      /* Brand tokens — Chad Godoy brand guide */
+      :root {
+        --navy: #0b2058;
+        --navy2: #0e2a6e;
+        --blue: #2563eb;
+        --light: #3882f6;
+        --pale: #eaf3ff;
+        --white: #ffffff;
+        --red: #ef4444;
+        --gold: #ffc531;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      body { font-family: "Montserrat", Arial, Helvetica, sans-serif; color: var(--white); }
+      .clip { position: absolute; inset: 0; pointer-events: none; }
+      svg text { font-family: "Montserrat", Arial, sans-serif; font-weight: 700; }
+
+      /* Camera wrapper (origin = Chad's face) */
+      #cam { position: absolute; inset: 0; transform-origin: 1040px 450px; overflow: hidden; }
+
+      /* Shared right-side panel */
+      .panel { position: absolute; right: 56px; top: 190px; width: 450px; background: rgba(11, 32, 88, 0.95); border-radius: 22px; padding: 28px 30px 30px 42px; box-shadow: 0 24px 60px rgba(11, 32, 88, 0.35); overflow: hidden; }
+      .panel .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 10px; background: linear-gradient(180deg, var(--light), var(--blue)); transform-origin: top; }
+      .label { display: block; font-weight: 700; font-size: 18px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--light); }
+      .headline { display: block; font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 40px; margin-top: 8px; color: var(--white); line-height: 1.08; }
+      .headline em { font-style: normal; color: var(--light); }
+      .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 4px; }
+      .w > span { display: inline-block; }
+      .viz { display: block; margin-top: 16px; }
+
+      /* Generic list items */
+      .items { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+      .item { position: relative; display: flex; align-items: center; gap: 14px; background: rgba(37, 99, 235, 0.16); border: 2px solid rgba(56, 130, 246, 0.5); border-radius: 14px; padding: 10px 14px; }
+      .item .n { position: relative; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; background: var(--blue); color: var(--white); font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 19px; display: flex; align-items: center; justify-content: center; }
+      .item .t { font-family: "Poppins", Arial, sans-serif; font-weight: 700; font-size: 23px; line-height: 1.15; white-space: nowrap; }
+      .item .t small { display: block; font-family: "Montserrat", Arial, sans-serif; font-weight: 600; font-size: 14px; color: var(--pale); letter-spacing: 0.08em; }
+      .item .strike { position: absolute; left: 12px; right: 12px; top: 50%; height: 5px; margin-top: -2px; border-radius: 3px; background: var(--red); transform-origin: left; }
+      .item .nx { position: absolute; inset: 0; border-radius: 50%; background: var(--red); display: flex; align-items: center; justify-content: center; }
+      .item .ok { position: absolute; inset: 0; border-radius: 50%; background: #16a34a; display: flex; align-items: center; justify-content: center; }
+      .item.good { background: var(--blue); border-color: var(--pale); }
+
+      /* Chat bubbles */
+      .bubbles { margin-top: 14px; display: flex; flex-direction: column; gap: 9px; }
+      .bub { align-self: flex-start; max-width: 360px; background: var(--pale); color: var(--navy); border-radius: 16px 16px 16px 4px; padding: 9px 14px; font-weight: 700; font-size: 18px; line-height: 1.25; }
+      .bub.alt { align-self: flex-end; background: var(--light); color: var(--white); border-radius: 16px 16px 4px 16px; }
+
+      /* Intro swipe */
+      #swipe .sb { position: absolute; top: -200px; height: 1480px; width: 260px; }
+      #swipe .sb1 { left: -500px; background: var(--blue); }
+      #swipe .sb2 { left: -800px; background: var(--navy); }
+      #swipe .sb3 { left: -1050px; background: var(--light); width: 90px; }
+
+      /* Title (left side) */
+      #title .panel { right: auto; left: 56px; top: 250px; width: 470px; }
+      #title .headline { font-size: 50px; margin-top: 12px; }
+      #title .rule { display: block; width: 120px; height: 6px; border-radius: 3px; background: var(--blue); margin-top: 18px; transform-origin: left; }
+      #title .tag { display: block; margin-top: 14px; font-weight: 600; font-size: 19px; letter-spacing: 0.14em; color: var(--pale); }
+
+      /* Intro: 12 years career staircase */
+      #roles .yrs { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
+      #roles .yrs b { font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 96px; line-height: 1; min-width: 118px; }
+      #roles .yrs span { font-weight: 700; font-size: 17px; letter-spacing: 0.14em; color: var(--light); line-height: 1.35; }
+      #roles .ringwrap { position: relative; width: 200px; height: 200px; margin: 10px auto 0; }
+      #roles .ringwrap svg { position: absolute; inset: 0; }
+      #roles .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      #roles .num { font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 80px; line-height: 1; }
+      #roles .unit { font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 20px; color: var(--light); letter-spacing: 0.12em; }
+
+      /* Lower third */
+      #lower .lt { position: absolute; left: 80px; bottom: 120px; display: flex; align-items: stretch; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(11, 32, 88, 0.35); }
+      #lower .lt-accent { width: 14px; background: var(--blue); }
+      #lower .lt-body { position: relative; background: rgba(11, 32, 88, 0.96); padding: 22px 40px 24px 30px; overflow: hidden; }
+      #lower .name { font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 54px; line-height: 1.05; display: block; }
+      #lower .name em { font-style: normal; color: var(--light); }
+      #lower .role { display: block; margin-top: 6px; font-weight: 600; font-size: 22px; letter-spacing: 0.18em; color: var(--pale); }
+      #lower .shine { position: absolute; top: 0; bottom: 0; left: 0; width: 120px; background: linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,0.22), rgba(255,255,255,0)); }
+
+      /* Chapter tags */
+      .chap .tagbox { position: absolute; left: 56px; top: 48px; display: flex; align-items: center; gap: 14px; background: rgba(11, 32, 88, 0.92); border-radius: 999px; padding: 12px 26px 12px 12px; }
+      .chap .num { width: 44px; height: 44px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 20px; }
+      .chap .txt { font-weight: 700; font-size: 20px; letter-spacing: 0.16em; }
+
+      /* Progress bar */
+      #progress .track { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: rgba(11, 32, 88, 0.5); }
+      #progress .fill { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: linear-gradient(90deg, var(--blue), var(--light)); transform-origin: left; }
+
+      /* Lesson slam */
+      .slam .panel { top: 210px; padding-bottom: 26px; }
+      .slam .big { display: flex; align-items: baseline; gap: 10px; margin-top: 2px; }
+      .slam .big b { font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 150px; line-height: 0.95; color: var(--white); }
+      .slam .big span { font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 40px; color: var(--light); }
+      .slam .headline { font-size: 38px; margin-top: 6px; }
+      .slam .dots { display: flex; gap: 10px; margin-top: 18px; }
+      .slam .dots i { width: 38px; height: 10px; border-radius: 5px; background: rgba(56, 130, 246, 0.3); }
+      .slam .dots i.on { background: var(--light); }
+      .slam .dots i.now { background: var(--white); }
+      .slam .extra { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+      .slam .very { font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 30px; color: var(--navy); background: var(--pale); border-radius: 10px; padding: 6px 12px; }
+      .slam .very.imp { background: var(--light); color: var(--white); }
+      .slam .lj { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 20px; border-radius: 12px; padding: 8px 14px; }
+      .slam .lj.y { background: var(--blue); }
+      .slam .lj.n { background: rgba(239, 68, 68, 0.2); border: 2px solid var(--red); }
+
+      /* Stamp */
+      .stamp .st { position: absolute; right: 40px; top: 250px; padding: 14px 26px; border: 8px solid var(--red); border-radius: 22px; background: rgba(11, 32, 88, 0.92); font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 62px; line-height: 1; letter-spacing: 0.02em; }
+      .stamp .st small { display: block; margin-top: 8px; font-family: "Montserrat", Arial, sans-serif; font-weight: 700; font-size: 20px; letter-spacing: 0.2em; color: var(--pale); text-align: center; }
+
+      /* Reference card */
+      .ref .card { position: absolute; right: 70px; top: 220px; width: 420px; display: flex; flex-direction: column; align-items: center; }
+      .ref .glow { position: absolute; top: 20px; width: 380px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(56, 130, 246, 0.55), rgba(56, 130, 246, 0) 70%); }
+      .ref .logos { position: relative; display: flex; gap: 30px; align-items: center; height: 300px; }
+      .ref .logos img { width: 170px; height: 170px; object-fit: contain; filter: drop-shadow(0 18px 30px rgba(11, 32, 88, 0.45)); }
+      .ref .tag { position: relative; margin-top: 6px; display: flex; flex-direction: column; align-items: center; background: rgba(11, 32, 88, 0.95); border-radius: 14px; padding: 10px 22px 12px; }
+      .ref .name { font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 32px; line-height: 1.1; }
+      .ref .sub { font-weight: 700; font-size: 16px; letter-spacing: 0.14em; color: var(--light); text-transform: uppercase; }
+
+
+      /* ===== Sketch board — Style B: white paper, brand-blue headings/shapes, navy handwriting, blue torn rim ===== */
+      .sketch .sheet { position: absolute; left: 0; top: 0; width: 1180px; height: 1080px; }
+      .sketch .edge, .sketch .paper { position: absolute; inset: 0; }
+      .sketch .edge { background: var(--blue); filter: drop-shadow(6px 0 10px rgba(0, 0, 0, 0.35)); }
+      .sketch .paper { background: #f7f6f2; }
+      .sketch .grain { position: absolute; inset: 0; opacity: 0.55; mix-blend-mode: multiply; }
+      .sketch .ink { position: absolute; display: block; white-space: nowrap; font-family: "Gochi Hand", cursive; color: var(--navy); line-height: 1.1; }
+      .sketch .ink.hd { color: var(--blue); }
+      .sketch svg.draw { position: absolute; left: 0; top: 0; overflow: visible; }
+      .sketch svg.draw path { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+      .sketch svg.draw path.b { stroke: #2563eb; }
+      .sketch svg.draw path.n { stroke: #0b2058; }
+      #subs, #progress { z-index: 20; }  /* stay on top of sketch-board paper */
+
+      /* Captions */
+      .cap-wrap { position: absolute; left: 0; right: 0; bottom: 70px; display: flex; justify-content: center; }
+      .cap { display: block; max-width: 1500px; text-align: center; background: rgba(11, 32, 88, 0.93); border-radius: 18px; padding: 18px 36px 22px; font-weight: 600; font-size: 40px; line-height: 1.3; }
+      .cap b { position: relative; display: inline-block; font-family: "Poppins", Arial, sans-serif; font-weight: 800; color: var(--light); }
+      .cap .ul { position: absolute; left: 0; right: 0; bottom: -2px; height: 5px; border-radius: 3px; background: var(--light); transform-origin: left; }
+
+      /* Recap */
+      #recap .items { gap: 7px; }
+      #recap .item { padding: 6px 12px; }
+      #recap .item .n { width: 34px; height: 34px; font-size: 16px; }
+      #recap .item .t { font-size: 20px; }
+
+      /* Like + subscribe */
+      #cta .row { position: absolute; left: 0; right: 0; bottom: 200px; display: flex; justify-content: center; gap: 22px; }
+      #cta .btn { position: relative; display: flex; align-items: center; gap: 12px; height: 78px; border-radius: 999px; padding: 0 30px 0 22px; font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 30px; letter-spacing: 0.04em; overflow: hidden; box-shadow: 0 16px 40px rgba(11, 32, 88, 0.35); }
+      #cta .like { background: var(--pale); color: var(--navy); }
+      #cta .like .fillb { position: absolute; inset: 0; background: var(--blue); border-radius: 999px; }
+      #cta .like svg, #cta .like span { position: relative; }
+      #cta .sub-btn { background: var(--red); color: var(--white); min-width: 300px; justify-content: center; }
+      #cta .sub-btn .done { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--navy); color: var(--pale); }
+      #cta .cursor { position: absolute; left: 0; top: 0; }
+
+      /* Small subtitles */
+      #subs .sub-wrap { position: absolute; left: 0; right: 0; bottom: 34px; display: flex; justify-content: center; }
+      #subs .sub { display: block; max-width: 1100px; text-align: center; background: rgba(11, 32, 88, 0.78); border-radius: 10px; padding: 6px 18px 8px; font-weight: 600; font-size: 30px; line-height: 1.3; }
+
+      /* End card */
+      #endcard .bg { position: absolute; inset: 0; background: var(--navy); }
+      #endcard .circle1 { position: absolute; width: 900px; height: 900px; border-radius: 50%; right: -300px; top: -380px; background: var(--navy2); }
+      #endcard .circle2 { position: absolute; width: 640px; height: 640px; border-radius: 50%; left: -220px; bottom: -300px; background: var(--navy2); }
+      #endcard .oring { position: absolute; width: 1100px; height: 1100px; left: 410px; top: -10px; border-radius: 50%; border: 3px solid rgba(56, 130, 246, 0.35); }
+      #endcard .stack { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+      #endcard .thanks { display: block; font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 120px; line-height: 1.05; }
+      #endcard .cag { display: flex; gap: 26px; margin-top: 34px; }
+      #endcard .cag span { display: block; font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 44px; letter-spacing: 0.06em; color: var(--light); }
+      #endcard .cag i { display: block; width: 6px; height: 44px; margin-top: 8px; background: rgba(56, 130, 246, 0.5); border-radius: 3px; }
+      #endcard .word { display: block; margin-top: 30px; font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 60px; }
+      #endcard .word em { font-style: normal; color: var(--light); }
+      #endcard .site { position: relative; display: inline-block; margin-top: 18px; font-weight: 600; font-size: 30px; letter-spacing: 0.08em; color: var(--pale); }
+      #endcard .site .ul { position: absolute; left: 0; right: 0; bottom: -8px; height: 5px; border-radius: 3px; background: var(--blue); transform-origin: left; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="583.8" data-width="1920" data-height="1080">
+
+      <div id="cam">
+        <video id="a-roll" class="clip" src="footage.mp4" playsinline data-start="0" data-duration="579.75" data-track-index="0"
+          style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover" data-has-audio="true"></video>
+      </div>
+
+      <!-- Background music bed: Huma-Huma → Not For Nothing → The Grand Affair → Huma-Huma, pre-mixed ~16 dB under voice -->
+      <audio id="music-bed" src="assets/music/bed.wav" data-start="0" data-duration="583.8" data-volume="1" data-track-index="40"></audio>
+
+      <!-- Sound effects -->
+      <audio id="sfx-001" src="assets/sfx/08-boom-swoosh.wav" data-start="0.0" data-duration="0.890" data-volume="0.4" data-track-index="9"></audio> <!-- intro swipe -->
+      <audio id="sfx-002" src="assets/sfx/whoosh-5.wav" data-start="1.25" data-duration="0.370" data-volume="0.32" data-track-index="9"></audio> <!-- roles in -->
+      <audio id="sfx-003" src="assets/sfx/49-click-tiny.wav" data-start="1.6" data-duration="0.180" data-volume="0.22" data-track-index="10"></audio> <!-- year tick 1 -->
+      <audio id="sfx-004" src="assets/sfx/49-click-tiny.wav" data-start="1.7000000000000002" data-duration="0.180" data-volume="0.22" data-track-index="9"></audio> <!-- year tick 2 -->
+      <audio id="sfx-005" src="assets/sfx/49-click-tiny.wav" data-start="1.8" data-duration="0.180" data-volume="0.22" data-track-index="10"></audio> <!-- year tick 3 -->
+      <audio id="sfx-006" src="assets/sfx/49-click-tiny.wav" data-start="1.9000000000000001" data-duration="0.180" data-volume="0.22" data-track-index="9"></audio> <!-- year tick 4 -->
+      <audio id="sfx-007" src="assets/sfx/49-click-tiny.wav" data-start="2.0" data-duration="0.180" data-volume="0.22" data-track-index="10"></audio> <!-- year tick 5 -->
+      <audio id="sfx-008" src="assets/sfx/49-click-tiny.wav" data-start="2.1" data-duration="0.180" data-volume="0.22" data-track-index="9"></audio> <!-- year tick 6 -->
+      <audio id="sfx-009" src="assets/sfx/49-click-tiny.wav" data-start="2.2" data-duration="0.180" data-volume="0.22" data-track-index="10"></audio> <!-- year tick 7 -->
+      <audio id="sfx-010" src="assets/sfx/49-click-tiny.wav" data-start="2.3000000000000003" data-duration="0.180" data-volume="0.22" data-track-index="9"></audio> <!-- year tick 8 -->
+      <audio id="sfx-011" src="assets/sfx/49-click-tiny.wav" data-start="2.4000000000000004" data-duration="0.180" data-volume="0.22" data-track-index="10"></audio> <!-- year tick 9 -->
+      <audio id="sfx-012" src="assets/sfx/49-click-tiny.wav" data-start="2.5" data-duration="0.180" data-volume="0.22" data-track-index="9"></audio> <!-- year tick 10 -->
+      <audio id="sfx-013" src="assets/sfx/49-click-tiny.wav" data-start="2.6" data-duration="0.180" data-volume="0.22" data-track-index="10"></audio> <!-- year tick 11 -->
+      <audio id="sfx-014" src="assets/sfx/49-click-tiny.wav" data-start="2.7" data-duration="0.180" data-volume="0.22" data-track-index="9"></audio> <!-- year tick 12 -->
+      <audio id="sfx-015" src="assets/sfx/03-bell-high.wav" data-start="2.95" data-duration="1.300" data-volume="0.25" data-track-index="9"></audio> <!-- 12 years -->
+      <audio id="sfx-016" src="assets/sfx/30-blip-pop.wav" data-start="3.16" data-duration="0.310" data-volume="0.32" data-track-index="10"></audio> <!-- role -->
+      <audio id="sfx-017" src="assets/sfx/43-click-tonal.wav" data-start="4.37" data-duration="0.310" data-volume="0.32" data-track-index="9"></audio> <!-- role -->
+      <audio id="sfx-018" src="assets/sfx/49-click-tiny.wav" data-start="5.0" data-duration="0.180" data-volume="0.32" data-track-index="9"></audio> <!-- chapter -->
+      <audio id="sfx-019" src="assets/sfx/60-blip-tonal.wav" data-start="6.43" data-duration="0.280" data-volume="0.32" data-track-index="9"></audio> <!-- role -->
+      <audio id="sfx-020" src="assets/sfx/30-blip-pop.wav" data-start="8.89" data-duration="0.310" data-volume="0.32" data-track-index="9"></audio> <!-- role -->
+      <audio id="sfx-021" src="assets/sfx/24-ding-ring.wav" data-start="9.3" data-duration="1.990" data-volume="0.22" data-track-index="9"></audio> <!-- top step flag -->
+      <audio id="sfx-022" src="assets/sfx/whoosh-3.wav" data-start="10.65" data-duration="0.430" data-volume="0.32" data-track-index="10"></audio> <!-- lower third in -->
+      <audio id="sfx-023" src="assets/sfx/whoosh-2.wav" data-start="16.1" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- lower third out -->
+      <audio id="sfx-024" src="assets/sfx/45-swish-short.wav" data-start="25.95" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-025" src="assets/sfx/49-click-tiny.wav" data-start="38.9" data-duration="0.180" data-volume="0.32" data-track-index="9"></audio> <!-- chapter -->
+      <audio id="sfx-026" src="assets/sfx/45-swish-short.wav" data-start="38.95" data-duration="0.380" data-volume="0.3" data-track-index="10"></audio> <!-- lesson 1 swish -->
+      <audio id="sfx-027" src="assets/sfx/06-impact-punch.wav" data-start="39.0" data-duration="1.560" data-volume="0.3" data-track-index="11"></audio> <!-- lesson 1 slam -->
+      <audio id="sfx-028" src="assets/sfx/impact.wav" data-start="45.15" data-duration="0.600" data-volume="0.3" data-track-index="9"></audio> <!-- VERY 1 -->
+      <audio id="sfx-029" src="assets/sfx/impact.wav" data-start="46.14" data-duration="0.600" data-volume="0.3" data-track-index="9"></audio> <!-- VERY 2 -->
+      <audio id="sfx-030" src="assets/sfx/impact.wav" data-start="46.39" data-duration="0.600" data-volume="0.32" data-track-index="10"></audio> <!-- VERY 3 -->
+      <audio id="sfx-031" src="assets/sfx/03-bell-high.wav" data-start="46.78" data-duration="1.300" data-volume="0.25" data-track-index="9"></audio> <!-- IMPORTANT -->
+      <audio id="sfx-032" src="assets/sfx/whoosh-2.wav" data-start="51.15" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- lesson 1 out -->
+      <audio id="sfx-033" src="assets/sfx/whoosh-3.wav" data-start="62.35" data-duration="0.430" data-volume="0.3" data-track-index="9"></audio> <!-- sketch board in -->
+      <audio id="sfx-034" src="assets/sfx/pencil.wav" data-start="64.3" data-duration="0.550" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-035" src="assets/sfx/pencil-rev.wav" data-start="71.76" data-duration="0.800" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-036" src="assets/sfx/pencil.wav" data-start="75.5" data-duration="0.800" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-037" src="assets/sfx/pencil-rev.wav" data-start="78.5" data-duration="0.650" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-038" src="assets/sfx/pencil.wav" data-start="84.0" data-duration="0.400" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-039" src="assets/sfx/whoosh-2.wav" data-start="84.95" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- sketch board out -->
+      <audio id="sfx-040" src="assets/sfx/45-swish-short.wav" data-start="90.25" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-041" src="assets/sfx/whoosh-3.wav" data-start="103.75" data-duration="0.430" data-volume="0.32" data-track-index="9"></audio> <!-- panel in -->
+      <audio id="sfx-042" src="assets/sfx/12-blip-double.wav" data-start="104.2" data-duration="1.340" data-volume="0.3" data-track-index="9"></audio> <!-- robot -->
+      <audio id="sfx-043" src="assets/sfx/43-click-tonal.wav" data-start="105.42" data-duration="0.310" data-volume="0.3" data-track-index="10"></audio> <!-- bubble 1 -->
+      <audio id="sfx-044" src="assets/sfx/30-blip-pop.wav" data-start="106.78" data-duration="0.310" data-volume="0.32" data-track-index="9"></audio> <!-- Hoy Chad -->
+      <audio id="sfx-045" src="assets/sfx/whoosh-2.wav" data-start="108.55" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- panel out -->
+      <audio id="sfx-046" src="assets/sfx/whoosh-4.wav" data-start="109.85" data-duration="0.390" data-volume="0.32" data-track-index="9"></audio> <!-- panel in -->
+      <audio id="sfx-047" src="assets/sfx/43-click-tonal.wav" data-start="112.8" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- 2013 -->
+      <audio id="sfx-048" src="assets/sfx/60-blip-tonal.wav" data-start="114.7" data-duration="0.280" data-volume="0.3" data-track-index="9"></audio> <!-- 2026 -->
+      <audio id="sfx-049" src="assets/sfx/03-bell-high.wav" data-start="116.28" data-duration="1.300" data-volume="0.25" data-track-index="9"></audio> <!-- ideas bulb -->
+      <audio id="sfx-050" src="assets/sfx/whoosh-2.wav" data-start="118.15" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- panel out -->
+      <audio id="sfx-051" src="assets/sfx/45-swish-short.wav" data-start="118.65" data-duration="0.380" data-volume="0.3" data-track-index="9"></audio> <!-- lesson 2 swish -->
+      <audio id="sfx-052" src="assets/sfx/06-impact-punch.wav" data-start="118.7" data-duration="1.560" data-volume="0.3" data-track-index="10"></audio> <!-- lesson 2 slam -->
+      <audio id="sfx-053" src="assets/sfx/49-click-tiny.wav" data-start="118.7" data-duration="0.180" data-volume="0.32" data-track-index="11"></audio> <!-- chapter -->
+      <audio id="sfx-054" src="assets/sfx/whoosh-2.wav" data-start="122.95" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- lesson 2 out -->
+      <audio id="sfx-055" src="assets/sfx/whoosh-5.wav" data-start="129.85" data-duration="0.370" data-volume="0.32" data-track-index="9"></audio> <!-- panel in -->
+      <audio id="sfx-056" src="assets/sfx/30-blip-pop.wav" data-start="130.2" data-duration="0.310" data-volume="0.28" data-track-index="10"></audio> <!-- diploma -->
+      <audio id="sfx-057" src="assets/sfx/26-hit-short.wav" data-start="134.6" data-duration="0.760" data-volume="0.26" data-track-index="9"></audio> <!-- diploma strike -->
+      <audio id="sfx-058" src="assets/sfx/43-click-tonal.wav" data-start="138.0" data-duration="0.310" data-volume="0.28" data-track-index="9"></audio> <!-- q1 -->
+      <audio id="sfx-059" src="assets/sfx/30-blip-pop.wav" data-start="139.85" data-duration="0.310" data-volume="0.28" data-track-index="9"></audio> <!-- q2 -->
+      <audio id="sfx-060" src="assets/sfx/43-click-tonal.wav" data-start="142.0" data-duration="0.310" data-volume="0.28" data-track-index="9"></audio> <!-- q3 -->
+      <audio id="sfx-061" src="assets/sfx/30-blip-pop.wav" data-start="144.06" data-duration="0.310" data-volume="0.28" data-track-index="9"></audio> <!-- q4 -->
+      <audio id="sfx-062" src="assets/sfx/43-click-tonal.wav" data-start="147.81" data-duration="0.310" data-volume="0.28" data-track-index="9"></audio> <!-- q5 -->
+      <audio id="sfx-063" src="assets/sfx/whoosh-2.wav" data-start="155.95" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- panel out -->
+      <audio id="sfx-064" src="assets/sfx/whoosh-3.wav" data-start="164.55" data-duration="0.430" data-volume="0.32" data-track-index="9"></audio> <!-- panel in -->
+      <audio id="sfx-065" src="assets/sfx/45-swish-short.wav" data-start="164.65" data-duration="0.380" data-volume="0.26" data-track-index="10"></audio> <!-- punch-in -->
+      <audio id="sfx-066" src="assets/sfx/50-thump-short.wav" data-start="165.2" data-duration="0.730" data-volume="0.3" data-track-index="9"></audio> <!-- scale tips -->
+      <audio id="sfx-067" src="assets/sfx/whoosh-2.wav" data-start="170.05" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- panel out -->
+      <audio id="sfx-068" src="assets/sfx/45-swish-short.wav" data-start="170.85" data-duration="0.380" data-volume="0.3" data-track-index="9"></audio> <!-- lesson 3 swish -->
+      <audio id="sfx-069" src="assets/sfx/06-impact-punch.wav" data-start="170.9" data-duration="1.560" data-volume="0.3" data-track-index="10"></audio> <!-- lesson 3 slam -->
+      <audio id="sfx-070" src="assets/sfx/49-click-tiny.wav" data-start="170.9" data-duration="0.180" data-volume="0.32" data-track-index="11"></audio> <!-- chapter -->
+      <audio id="sfx-071" src="assets/sfx/whoosh-2.wav" data-start="174.95" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- lesson 3 out -->
+      <audio id="sfx-072" src="assets/sfx/45-swish-short.wav" data-start="178.22" data-duration="0.380" data-volume="0.24" data-track-index="9"></audio> <!-- snap -->
+      <audio id="sfx-073" src="assets/sfx/whoosh-3.wav" data-start="190.35" data-duration="0.430" data-volume="0.3" data-track-index="9"></audio> <!-- sketch board in -->
+      <audio id="sfx-074" src="assets/sfx/pencil-rev.wav" data-start="202.2" data-duration="0.800" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-075" src="assets/sfx/45-swish-short.wav" data-start="202.75" data-duration="0.380" data-volume="0.26" data-track-index="10"></audio> <!-- punch-in -->
+      <audio id="sfx-076" src="assets/sfx/pencil.wav" data-start="206.0" data-duration="0.800" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-077" src="assets/sfx/pencil-rev.wav" data-start="210.82" data-duration="1.420" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-078" src="assets/sfx/whoosh-2.wav" data-start="216.75" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- sketch board out -->
+      <audio id="sfx-079" src="assets/sfx/45-swish-short.wav" data-start="220.36" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- not for you snap -->
+      <audio id="sfx-080" src="assets/sfx/45-swish-short.wav" data-start="233.65" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-081" src="assets/sfx/45-swish-short.wav" data-start="241.85" data-duration="0.380" data-volume="0.3" data-track-index="9"></audio> <!-- lesson 4 swish -->
+      <audio id="sfx-082" src="assets/sfx/06-impact-punch.wav" data-start="241.9" data-duration="1.560" data-volume="0.3" data-track-index="10"></audio> <!-- lesson 4 slam -->
+      <audio id="sfx-083" src="assets/sfx/49-click-tiny.wav" data-start="241.9" data-duration="0.180" data-volume="0.32" data-track-index="11"></audio> <!-- chapter -->
+      <audio id="sfx-084" src="assets/sfx/whoosh-2.wav" data-start="248.85" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- lesson 4 out -->
+      <audio id="sfx-085" src="assets/sfx/45-swish-short.wav" data-start="252.55" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-086" src="assets/sfx/43-click-tonal.wav" data-start="265.43" data-duration="0.310" data-volume="0.32" data-track-index="9"></audio> <!-- youtube -->
+      <audio id="sfx-087" src="assets/sfx/60-blip-tonal.wav" data-start="266.46" data-duration="0.280" data-volume="0.32" data-track-index="9"></audio> <!-- facebook -->
+      <audio id="sfx-088" src="assets/sfx/whoosh-3.wav" data-start="269.05" data-duration="0.430" data-volume="0.3" data-track-index="9"></audio> <!-- sketch board in -->
+      <audio id="sfx-089" src="assets/sfx/pencil.wav" data-start="272.4" data-duration="0.850" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-090" src="assets/sfx/pencil-rev.wav" data-start="280.43" data-duration="1.420" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-091" src="assets/sfx/pencil.wav" data-start="284.19" data-duration="0.850" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-092" src="assets/sfx/45-swish-short.wav" data-start="285.35" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-093" src="assets/sfx/pencil-rev.wav" data-start="285.5" data-duration="0.450" data-volume="0.15" data-track-index="10"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-094" src="assets/sfx/40-boing-down.wav" data-start="286.26" data-duration="1.070" data-volume="0.22" data-track-index="9"></audio> <!-- put down X -->
+      <audio id="sfx-095" src="assets/sfx/pencil.wav" data-start="286.26" data-duration="0.400" data-volume="0.15" data-track-index="10"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-096" src="assets/sfx/whoosh-2.wav" data-start="288.55" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- sketch board out -->
+      <audio id="sfx-097" src="assets/sfx/45-swish-short.wav" data-start="290.95" data-duration="0.380" data-volume="0.3" data-track-index="9"></audio> <!-- lesson 5 swish -->
+      <audio id="sfx-098" src="assets/sfx/06-impact-punch.wav" data-start="291.0" data-duration="1.560" data-volume="0.3" data-track-index="10"></audio> <!-- lesson 5 slam -->
+      <audio id="sfx-099" src="assets/sfx/49-click-tiny.wav" data-start="291.0" data-duration="0.180" data-volume="0.32" data-track-index="11"></audio> <!-- chapter -->
+      <audio id="sfx-100" src="assets/sfx/03-bell-high.wav" data-start="294.78" data-duration="1.300" data-volume="0.25" data-track-index="9"></audio> <!-- love job -->
+      <audio id="sfx-101" src="assets/sfx/26-hit-short.wav" data-start="296.3" data-duration="0.760" data-volume="0.28" data-track-index="9"></audio> <!-- not company -->
+      <audio id="sfx-102" src="assets/sfx/whoosh-2.wav" data-start="297.95" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- lesson 5 out -->
+      <audio id="sfx-103" src="assets/sfx/45-swish-short.wav" data-start="298.55" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-104" src="assets/sfx/06-impact-punch.wav" data-start="298.88" data-duration="1.560" data-volume="0.35" data-track-index="10"></audio> <!-- HARD RULE -->
+      <audio id="sfx-105" src="assets/sfx/45-swish-short.wav" data-start="320.55" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-106" src="assets/sfx/impact.wav" data-start="322.23" data-duration="0.600" data-volume="0.3" data-track-index="9"></audio> <!-- replaceable -->
+      <audio id="sfx-107" src="assets/sfx/26-hit-short.wav" data-start="332.17" data-duration="0.760" data-volume="0.28" data-track-index="9"></audio> <!-- you're out -->
+      <audio id="sfx-108" src="assets/sfx/45-swish-short.wav" data-start="335.35" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-109" src="assets/sfx/whoosh-4.wav" data-start="343.95" data-duration="0.390" data-volume="0.32" data-track-index="9"></audio> <!-- panel in -->
+      <audio id="sfx-110" src="assets/sfx/30-blip-pop.wav" data-start="344.4" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- you -->
+      <audio id="sfx-111" src="assets/sfx/43-click-tonal.wav" data-start="346.08" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- client A -->
+      <audio id="sfx-112" src="assets/sfx/60-blip-tonal.wav" data-start="346.68" data-duration="0.280" data-volume="0.3" data-track-index="9"></audio> <!-- client B -->
+      <audio id="sfx-113" src="assets/sfx/30-blip-pop.wav" data-start="347.28" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- client C -->
+      <audio id="sfx-114" src="assets/sfx/whoosh-2.wav" data-start="354.15" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- panel out -->
+      <audio id="sfx-115" src="assets/sfx/45-swish-short.wav" data-start="354.95" data-duration="0.380" data-volume="0.3" data-track-index="9"></audio> <!-- lesson 6 swish -->
+      <audio id="sfx-116" src="assets/sfx/06-impact-punch.wav" data-start="355.0" data-duration="1.560" data-volume="0.3" data-track-index="10"></audio> <!-- lesson 6 slam -->
+      <audio id="sfx-117" src="assets/sfx/49-click-tiny.wav" data-start="355.0" data-duration="0.180" data-volume="0.32" data-track-index="11"></audio> <!-- chapter -->
+      <audio id="sfx-118" src="assets/sfx/whoosh-2.wav" data-start="361.05" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- lesson 6 out -->
+      <audio id="sfx-119" src="assets/sfx/whoosh-5.wav" data-start="366.95" data-duration="0.370" data-volume="0.32" data-track-index="9"></audio> <!-- panel in -->
+      <audio id="sfx-120" src="assets/sfx/30-blip-pop.wav" data-start="368.15" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- VA pillar -->
+      <audio id="sfx-121" src="assets/sfx/43-click-tonal.wav" data-start="369.64" data-duration="0.310" data-volume="0.26" data-track-index="9"></audio> <!-- ? 1 -->
+      <audio id="sfx-122" src="assets/sfx/60-blip-tonal.wav" data-start="369.94" data-duration="0.280" data-volume="0.26" data-track-index="10"></audio> <!-- ? 2 -->
+      <audio id="sfx-123" src="assets/sfx/28-bloop-low.wav" data-start="380.25" data-duration="1.250" data-volume="0.3" data-track-index="9"></audio> <!-- pillar falls -->
+      <audio id="sfx-124" src="assets/sfx/whoosh-2.wav" data-start="383.15" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- panel out -->
+      <audio id="sfx-125" src="assets/sfx/47-vocal-wow.wav" data-start="384.08" data-duration="1.460" data-volume="0.28" data-track-index="9"></audio> <!-- nganga -->
+      <audio id="sfx-126" src="assets/sfx/45-swish-short.wav" data-start="397.05" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-127" src="assets/sfx/45-swish-short.wav" data-start="409.75" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-128" src="assets/sfx/45-swish-short.wav" data-start="427.72" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- utak snap -->
+      <audio id="sfx-129" src="assets/sfx/whoosh-3.wav" data-start="432.35" data-duration="0.430" data-volume="0.3" data-track-index="9"></audio> <!-- sketch board in -->
+      <audio id="sfx-130" src="assets/sfx/pencil-rev.wav" data-start="433.07" data-duration="0.850" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-131" src="assets/sfx/pencil.wav" data-start="439.13" data-duration="0.850" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-132" src="assets/sfx/pencil-rev.wav" data-start="444.06" data-duration="0.850" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-133" src="assets/sfx/pencil.wav" data-start="446.9" data-duration="0.850" data-volume="0.15" data-track-index="9"></audio> <!-- pencil (drawing) -->
+      <audio id="sfx-134" src="assets/sfx/whoosh-2.wav" data-start="455.35" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- sketch board out -->
+      <audio id="sfx-135" src="assets/sfx/whoosh-3.wav" data-start="455.95" data-duration="0.430" data-volume="0.32" data-track-index="9"></audio> <!-- panel in -->
+      <audio id="sfx-136" src="assets/sfx/28-bloop-low.wav" data-start="458.46" data-duration="1.250" data-volume="0.3" data-track-index="9"></audio> <!-- VA drops -->
+      <audio id="sfx-137" src="assets/sfx/29-bloop-low-2.wav" data-start="462.3" data-duration="0.820" data-volume="0.28" data-track-index="9"></audio> <!-- taas-baba -->
+      <audio id="sfx-138" src="assets/sfx/24-ding-ring.wav" data-start="465.18" data-duration="1.990" data-volume="0.25" data-track-index="9"></audio> <!-- side income -->
+      <audio id="sfx-139" src="assets/sfx/whoosh-2.wav" data-start="466.95" data-duration="0.230" data-volume="0.2" data-track-index="10"></audio> <!-- panel out -->
+      <audio id="sfx-140" src="assets/sfx/45-swish-short.wav" data-start="469.55" data-duration="0.380" data-volume="0.3" data-track-index="9"></audio> <!-- lesson 7 swish -->
+      <audio id="sfx-141" src="assets/sfx/06-impact-punch.wav" data-start="469.6" data-duration="1.560" data-volume="0.3" data-track-index="10"></audio> <!-- lesson 7 slam -->
+      <audio id="sfx-142" src="assets/sfx/49-click-tiny.wav" data-start="469.6" data-duration="0.180" data-volume="0.32" data-track-index="11"></audio> <!-- chapter -->
+      <audio id="sfx-143" src="assets/sfx/whoosh-2.wav" data-start="476.35" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- lesson 7 out -->
+      <audio id="sfx-144" src="assets/sfx/45-swish-short.wav" data-start="477.95" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-145" src="assets/sfx/06-impact-punch.wav" data-start="478.0" data-duration="1.560" data-volume="0.35" data-track-index="10"></audio> <!-- HARD RULE 2 -->
+      <audio id="sfx-146" src="assets/sfx/45-swish-short.wav" data-start="488.39" data-duration="0.380" data-volume="0.24" data-track-index="9"></audio> <!-- nakakalimot -->
+      <audio id="sfx-147" src="assets/sfx/45-swish-short.wav" data-start="499.48" data-duration="0.380" data-volume="0.24" data-track-index="9"></audio> <!-- nakakalimot 2 -->
+      <audio id="sfx-148" src="assets/sfx/whoosh-4.wav" data-start="500.65" data-duration="0.390" data-volume="0.32" data-track-index="9"></audio> <!-- panel in -->
+      <audio id="sfx-149" src="assets/sfx/30-blip-pop.wav" data-start="502.01" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- gastos -->
+      <audio id="sfx-150" src="assets/sfx/43-click-tonal.wav" data-start="503.28" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- labas -->
+      <audio id="sfx-151" src="assets/sfx/60-blip-tonal.wav" data-start="505.08" data-duration="0.280" data-volume="0.3" data-track-index="9"></audio> <!-- bakasyon -->
+      <audio id="sfx-152" src="assets/sfx/whoosh-2.wav" data-start="506.95" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- panel out -->
+      <audio id="sfx-153" src="assets/sfx/whoosh-5.wav" data-start="511.65" data-duration="0.370" data-volume="0.32" data-track-index="9"></audio> <!-- panel in -->
+      <audio id="sfx-154" src="assets/sfx/30-blip-pop.wav" data-start="512.0" data-duration="0.310" data-volume="0.3" data-track-index="10"></audio> <!-- piggy -->
+      <audio id="sfx-155" src="assets/sfx/03-bell-high.wav" data-start="513.0" data-duration="1.300" data-volume="0.25" data-track-index="9"></audio> <!-- coin -->
+      <audio id="sfx-156" src="assets/sfx/24-ding-ring.wav" data-start="513.88" data-duration="1.990" data-volume="0.22" data-track-index="10"></audio> <!-- growth -->
+      <audio id="sfx-157" src="assets/sfx/45-swish-short.wav" data-start="514.95" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-158" src="assets/sfx/43-click-tonal.wav" data-start="515.36" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- umbrella -->
+      <audio id="sfx-159" src="assets/sfx/whoosh-2.wav" data-start="518.15" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- panel out -->
+      <audio id="sfx-160" src="assets/sfx/whoosh-3.wav" data-start="536.85" data-duration="0.430" data-volume="0.32" data-track-index="9"></audio> <!-- panel in -->
+      <audio id="sfx-161" src="assets/sfx/29-bloop-low-2.wav" data-start="538.07" data-duration="0.820" data-volume="0.28" data-track-index="9"></audio> <!-- tumal dip -->
+      <audio id="sfx-162" src="assets/sfx/24-ding-ring.wav" data-start="544.59" data-duration="1.990" data-volume="0.25" data-track-index="9"></audio> <!-- prepared shield -->
+      <audio id="sfx-163" src="assets/sfx/whoosh-2.wav" data-start="547.15" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- panel out -->
+      <audio id="sfx-164" src="assets/sfx/45-swish-short.wav" data-start="548.25" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-165" src="assets/sfx/whoosh-4.wav" data-start="548.25" data-duration="0.390" data-volume="0.32" data-track-index="10"></audio> <!-- panel in -->
+      <audio id="sfx-166" src="assets/sfx/03-bell-high.wav" data-start="553.2" data-duration="1.300" data-volume="0.25" data-track-index="9"></audio> <!-- jar coin 1 -->
+      <audio id="sfx-167" src="assets/sfx/03-bell-high.wav" data-start="553.75" data-duration="1.300" data-volume="0.22" data-track-index="10"></audio> <!-- jar coin 2 -->
+      <audio id="sfx-168" src="assets/sfx/whoosh-2.wav" data-start="556.35" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- panel out -->
+      <audio id="sfx-169" src="assets/sfx/49-click-tiny.wav" data-start="557.0" data-duration="0.180" data-volume="0.32" data-track-index="9"></audio> <!-- chapter -->
+      <audio id="sfx-170" src="assets/sfx/whoosh-5.wav" data-start="557.15" data-duration="0.370" data-volume="0.32" data-track-index="10"></audio> <!-- panel in -->
+      <audio id="sfx-171" src="assets/sfx/43-click-tonal.wav" data-start="558.6" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- recap 1 -->
+      <audio id="sfx-172" src="assets/sfx/43-click-tonal.wav" data-start="559.05" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- recap 2 -->
+      <audio id="sfx-173" src="assets/sfx/43-click-tonal.wav" data-start="559.5" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- recap 3 -->
+      <audio id="sfx-174" src="assets/sfx/43-click-tonal.wav" data-start="559.95" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- recap 4 -->
+      <audio id="sfx-175" src="assets/sfx/43-click-tonal.wav" data-start="560.4" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- recap 5 -->
+      <audio id="sfx-176" src="assets/sfx/43-click-tonal.wav" data-start="560.85" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- recap 6 -->
+      <audio id="sfx-177" src="assets/sfx/43-click-tonal.wav" data-start="561.3" data-duration="0.310" data-volume="0.3" data-track-index="9"></audio> <!-- recap 7 -->
+      <audio id="sfx-178" src="assets/sfx/24-ding-ring.wav" data-start="561.6" data-duration="1.990" data-volume="0.25" data-track-index="10"></audio> <!-- recap done -->
+      <audio id="sfx-179" src="assets/sfx/whoosh-2.wav" data-start="568.35" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- panel out -->
+      <audio id="sfx-180" src="assets/sfx/45-swish-short.wav" data-start="568.95" data-duration="0.380" data-volume="0.26" data-track-index="9"></audio> <!-- punch-in -->
+      <audio id="sfx-181" src="assets/sfx/whoosh-3.wav" data-start="569.0" data-duration="0.430" data-volume="0.3" data-track-index="10"></audio> <!-- cta in -->
+      <audio id="sfx-182" src="assets/sfx/43-click-tonal.wav" data-start="569.78" data-duration="0.310" data-volume="0.4" data-track-index="9"></audio> <!-- like -->
+      <audio id="sfx-183" src="assets/sfx/43-click-tonal.wav" data-start="571.3" data-duration="0.310" data-volume="0.4" data-track-index="9"></audio> <!-- subscribe -->
+      <audio id="sfx-184" src="assets/sfx/24-ding-ring.wav" data-start="571.38" data-duration="1.990" data-volume="0.26" data-track-index="10"></audio> <!-- subscribed -->
+      <audio id="sfx-185" src="assets/sfx/whoosh-2.wav" data-start="574.95" data-duration="0.230" data-volume="0.2" data-track-index="9"></audio> <!-- cta out -->
+      <audio id="sfx-186" src="assets/sfx/whoosh-7.wav" data-start="579.55" data-duration="0.670" data-volume="0.5" data-track-index="9"></audio> <!-- end wipe -->
+      <audio id="sfx-187" src="assets/sfx/whoosh-1.wav" data-start="580.2" data-duration="0.450" data-volume="0.25" data-track-index="10"></audio> <!-- thanks -->
+      <audio id="sfx-188" src="assets/sfx/impact.wav" data-start="581.0" data-duration="0.600" data-volume="0.3" data-track-index="9"></audio> <!-- slam 1 -->
+      <audio id="sfx-189" src="assets/sfx/impact.wav" data-start="581.35" data-duration="0.600" data-volume="0.3" data-track-index="10"></audio> <!-- slam 2 -->
+      <audio id="sfx-190" src="assets/sfx/impact.wav" data-start="581.7" data-duration="0.600" data-volume="0.3" data-track-index="9"></audio> <!-- slam 3 -->
+      <audio id="sfx-191" src="assets/sfx/55-orchestra-hit-sparkle.wav" data-start="582.1" data-duration="1.700" data-volume="0.25" data-track-index="10"></audio> <!-- wordmark -->
+
+      <!-- Small subtitles -->
+      <div id="subs" class="clip" data-start="0" data-duration="579.6" data-track-index="15">
+        <div class="sub-wrap"><span class="sub" id="sub-text"></span></div>
+      </div>
+
+      <!-- Progress bar -->
+      <div id="progress" class="clip" data-start="0" data-duration="579.6" data-track-index="6">
+        <div class="track"></div><div class="fill" id="progress-fill"></div>
+      </div>
+
+      <!-- Intro swipe -->
+      <div id="swipe" class="clip" data-start="0" data-duration="1.2" data-track-index="5">
+        <div class="sb sb3" id="sb3"></div><div class="sb sb2" id="sb2"></div><div class="sb sb1" id="sb1"></div>
+      </div>
+
+      <!-- 12 years: career staircase (right) 1.3 → 10.6 -->
+      <div id="roles" class="clip" data-start="1.3" data-duration="9.3" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">My VA journey</span>
+          <div class="yrs"><b id="r-num">0</b><span>YEARS<br />OF WORK FROM HOME</span></div>
+          <svg class="viz" width="376" height="270" viewBox="0 0 376 270">
+            <line x1="0" y1="262" x2="376" y2="262" stroke="rgba(234,243,255,0.4)" stroke-width="3" />
+            <g class="st" id="st1x"><rect x="2" y="202" width="88" height="58" rx="8" fill="#1e3a8a" stroke="#3882F6" stroke-width="2" /><text x="46" y="226" font-size="12" fill="#EAF3FF" text-anchor="middle">VIRTUAL</text><text x="46" y="242" font-size="12" fill="#EAF3FF" text-anchor="middle">ASSISTANT</text></g>
+            <g class="st" id="st2x"><rect x="96" y="152" width="88" height="108" rx="8" fill="#1e40af" stroke="#3882F6" stroke-width="2" /><text x="140" y="176" font-size="12" fill="#EAF3FF" text-anchor="middle">SOCIAL MEDIA</text><text x="140" y="192" font-size="12" fill="#EAF3FF" text-anchor="middle">MANAGER</text></g>
+            <g class="st" id="st3x"><rect x="190" y="102" width="88" height="158" rx="8" fill="#2563EB" stroke="#3882F6" stroke-width="2" /><text x="234" y="126" font-size="12" fill="#FFFFFF" text-anchor="middle">CONTENT</text><text x="234" y="142" font-size="12" fill="#FFFFFF" text-anchor="middle">MANAGER</text></g>
+            <g class="st" id="st4x"><rect x="284" y="52" width="88" height="208" rx="8" fill="#3882F6" stroke="#EAF3FF" stroke-width="2" /><text x="328" y="76" font-size="12" fill="#FFFFFF" text-anchor="middle">EXECUTIVE</text><text x="328" y="92" font-size="12" fill="#FFFFFF" text-anchor="middle">VA</text></g>
+            <g id="climber"><circle cx="0" cy="0" r="14" fill="#FFFFFF" stroke="#0B2058" stroke-width="3" /><circle cx="0" cy="0" r="5" fill="#2563EB" /></g>
+            <g id="flag"><line x1="328" y1="52" x2="328" y2="14" stroke="#EAF3FF" stroke-width="3" /><polygon points="328,14 352,22 328,30" fill="#FFC531" /></g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Lower third 10.7 → 16.6 -->
+      <div id="lower" class="clip" data-start="10.7" data-duration="5.9" data-track-index="2">
+        <div class="lt"><div class="lt-accent"></div>
+          <div class="lt-body">
+            <span class="name">Chad <em>Godoy</em></span>
+            <span class="role">VA FOR 12 YEARS &bull; CHADGODOY.IO</span>
+            <div class="shine" id="lt-shine"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ch0" class="clip chap" data-start="5.0" data-duration="33.7" data-track-index="7">
+        <div class="tagbox"><span class="num">00</span><span class="txt">INTRO</span></div>
+      </div>
+      <div id="ch1" class="clip chap" data-start="38.9" data-duration="79.6" data-track-index="7">
+        <div class="tagbox"><span class="num">01</span><span class="txt">LESSON 1 · COMMUNICATION</span></div>
+      </div>
+      <div id="ch2" class="clip chap" data-start="118.7" data-duration="52.0" data-track-index="7">
+        <div class="tagbox"><span class="num">02</span><span class="txt">LESSON 2 · EXPERIENCE &gt; DEGREE</span></div>
+      </div>
+      <div id="ch3" class="clip chap" data-start="170.9" data-duration="70.8" data-track-index="7">
+        <div class="tagbox"><span class="num">03</span><span class="txt">LESSON 3 · ALWAYS UPSKILL</span></div>
+      </div>
+      <div id="ch4" class="clip chap" data-start="241.9" data-duration="48.9" data-track-index="7">
+        <div class="tagbox"><span class="num">04</span><span class="txt">LESSON 4 · CHOOSE YOUR CIRCLE</span></div>
+      </div>
+      <div id="ch5" class="clip chap" data-start="291.0" data-duration="63.8" data-track-index="7">
+        <div class="tagbox"><span class="num">05</span><span class="txt">LESSON 5 · LOVE THE JOB, NOT THE COMPANY</span></div>
+      </div>
+      <div id="ch6" class="clip chap" data-start="355.0" data-duration="114.4" data-track-index="7">
+        <div class="tagbox"><span class="num">06</span><span class="txt">LESSON 6 · BACKUP PLAN</span></div>
+      </div>
+      <div id="ch7" class="clip chap" data-start="469.6" data-duration="87.3" data-track-index="7">
+        <div class="tagbox"><span class="num">07</span><span class="txt">LESSON 7 · SAVE &amp; INVEST</span></div>
+      </div>
+      <div id="ch8" class="clip chap" data-start="557.0" data-duration="22.4" data-track-index="7">
+        <div class="tagbox"><span class="num">&#10003;</span><span class="txt">RECAP</span></div>
+      </div>
+
+      <div id="c12y" class="clip" data-start="26.0" data-duration="4.4" data-track-index="3">
+        <div class="cap-wrap"><span class="cap">Kasi solid naman talaga, <b>12 years<i class="ul"></i></b>.</span></div>
+      </div>
+      <div id="ccomm" class="clip" data-start="90.3" data-duration="2.5" data-track-index="3">
+        <div class="cap-wrap"><span class="cap">Dapat marunong ka <b>makipag-communicate<i class="ul"></i></b>.</span></div>
+      </div>
+      <div id="cexp" class="clip" data-start="164.7" data-duration="3.9" data-track-index="3">
+        <div class="cap-wrap"><span class="cap"><b>Experience<i class="ul"></i></b> speaks louder than your degree.</span></div>
+      </div>
+      <div id="ctamad" class="clip" data-start="233.7" data-duration="5.9" data-track-index="3">
+        <div class="cap-wrap"><span class="cap">If ikaw yung tao na <b>tamad matuto<i class="ul"></i></b>, hindi talaga ito para sa'yo.</span></div>
+      </div>
+      <div id="csupport" class="clip" data-start="252.6" data-duration="4.3" data-track-index="3">
+        <div class="cap-wrap"><span class="cap">Surround yourself ng mga taong <b>susuporta<i class="ul"></i></b> sa'yo.</span></div>
+      </div>
+      <div id="creplace" class="clip" data-start="320.6" data-duration="3.7" data-track-index="3">
+        <div class="cap-wrap"><span class="cap">You're going to be <b>replaceable<i class="ul"></i></b>.</span></div>
+      </div>
+      <div id="ccompany" class="clip" data-start="335.4" data-duration="7.4" data-track-index="3">
+        <div class="cap-wrap"><span class="cap">Love your job, but don't fall in love with your <b>company<i class="ul"></i></b>.</span></div>
+      </div>
+      <div id="cjustva" class="clip" data-start="397.1" data-duration="7.3" data-track-index="3">
+        <div class="cap-wrap"><span class="cap">A VA job can start a life, but don't end it being <b>just a VA<i class="ul"></i></b>.</span></div>
+      </div>
+      <div id="ccash" class="clip" data-start="409.8" data-duration="4.8" data-track-index="3">
+        <div class="cap-wrap"><span class="cap">If you're already a VA, start your own <b>business cash flow<i class="ul"></i></b>.</span></div>
+      </div>
+      <div id="cwalang" class="clip" data-start="480.1" data-duration="2.3" data-track-index="3">
+        <div class="cap-wrap"><span class="cap"><b>Walang<i class="ul"></i></b> makakaligtas dito.</span></div>
+      </div>
+      <div id="crainy" class="clip" data-start="515.0" data-duration="3.2" data-track-index="3">
+        <div class="cap-wrap"><span class="cap">Para during <b>rainy days<i class="ul"></i></b>, may pagkukunan ka.</span></div>
+      </div>
+      <div id="cfund" class="clip" data-start="548.3" data-duration="2.7" data-track-index="3">
+        <div class="cap-wrap"><span class="cap">Always prepare your <b>emergency fund<i class="ul"></i></b>.</span></div>
+      </div>
+
+      <div id="slam1" class="clip slam" data-start="39.0" data-duration="12.6" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Hard lesson</span>
+          <div class="big"><b>01</b><span>/ 07</span></div>
+          <span class="headline">Communication is <em>everything</em></span>
+          <div class="dots"><i class="now"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div>
+          <div class="extra"><span class="very" id="v1">VERY</span><span class="very" id="v2">VERY</span><span class="very" id="v3">VERY</span><span class="very imp" id="v4">IMPORTANT</span></div>
+        </div>
+      </div>
+      <div id="slam2" class="clip slam" data-start="118.7" data-duration="4.7" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Hard lesson</span>
+          <div class="big"><b>02</b><span>/ 07</span></div>
+          <span class="headline">Experience <em>&gt;</em> Degree</span>
+          <div class="dots"><i class="on"></i><i class="now"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div>
+          
+        </div>
+      </div>
+      <div id="slam3" class="clip slam" data-start="170.9" data-duration="4.5" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Hard lesson</span>
+          <div class="big"><b>03</b><span>/ 07</span></div>
+          <span class="headline">Always <em>upskill</em></span>
+          <div class="dots"><i class="on"></i><i class="on"></i><i class="now"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div>
+          
+        </div>
+      </div>
+      <div id="slam4" class="clip slam" data-start="241.9" data-duration="7.4" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Hard lesson</span>
+          <div class="big"><b>04</b><span>/ 07</span></div>
+          <span class="headline">Choose your <em>circle</em></span>
+          <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="now"></i><i class=""></i><i class=""></i><i class=""></i></div>
+          
+        </div>
+      </div>
+      <div id="slam5" class="clip slam" data-start="291.0" data-duration="7.4" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Hard lesson</span>
+          <div class="big"><b>05</b><span>/ 07</span></div>
+          <span class="headline">Love the job, <em>not the company</em></span>
+          <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="now"></i><i class=""></i><i class=""></i></div>
+          <div class="extra"><span class="lj y" id="lj1">&#9829; Your job</span><span class="lj n" id="lj2">&#10005; The company</span></div>
+        </div>
+      </div>
+      <div id="slam6" class="clip slam" data-start="355.0" data-duration="6.5" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Hard lesson</span>
+          <div class="big"><b>06</b><span>/ 07</span></div>
+          <span class="headline">Always have a <em>backup plan</em></span>
+          <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="now"></i><i class=""></i></div>
+          
+        </div>
+      </div>
+      <div id="slam7" class="clip slam" data-start="469.6" data-duration="7.2" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Hard lesson</span>
+          <div class="big"><b>07</b><span>/ 07</span></div>
+          <span class="headline">Save money &amp; <em>invest</em></span>
+          <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="now"></i></div>
+          
+        </div>
+      </div>
+
+      <!-- Sketch board: L1 why clients hire 62.4 → 85.4 -->
+      <div id="skb1" class="clip sketch" data-start="62.4" data-duration="23.0" data-track-index="1">
+        <div class="sheet">
+          <div class="edge"></div>
+          <div class="paper">
+            <svg class="grain" width="1180" height="1080"><filter id="skb1-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="4" /><feColorMatrix values="0 0 0 0 0.55  0 0 0 0 0.53  0 0 0 0 0.5  0 0 0 0.35 0" /></filter><rect width="1180" height="1080" filter="url(#skb1-grain)" /></svg>
+            <span class="ink hd" id="skb1-t1" style="left: 110px; top: 100px; font-size: 84px;">Why clients hire a VA</span>
+            <span class="ink" id="skb1-t2a" style="left: 120px; top: 262px; font-size: 64px;">tools</span>
+            <span class="ink" id="skb1-t2b" style="left: 330px; top: 262px; font-size: 64px;">AI</span>
+            <span class="ink" id="skb1-t2c" style="left: 470px; top: 262px; font-size: 64px;">web management</span>
+            <span class="ink" id="skb1-t3" style="left: 150px; top: 425px; font-size: 80px;">someone to talk to</span>
+            <span class="ink" id="skb1-t4" style="left: 160px; top: 665px; font-size: 80px;">business decisions</span>
+            <svg class="draw" width="1180" height="1080">
+              <path id="skb1-u1" class="b" />
+              <path id="skb1-s1" class="b" />
+              <path id="skb1-s2" class="b" />
+              <path id="skb1-s3" class="b" />
+              <path id="skb1-c1" class="b" />
+              <path id="skb1-a1" class="n" />
+              <path id="skb1-a2" class="n" />
+              <path id="skb1-u2" class="b" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- L1: robot 103.8 → 109.0 -->
+      <div id="robot" class="clip" data-start="103.8" data-duration="5.2" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Hindi dapat ganito</span>
+          <span class="headline">Parang <em>robot</em></span>
+          <svg class="viz" width="376" height="120" viewBox="0 0 376 120">
+            <g id="rb">
+              <rect x="138" y="30" width="100" height="80" rx="20" fill="#2563EB" stroke="#EAF3FF" stroke-width="4" />
+              <line x1="188" y1="30" x2="188" y2="10" stroke="#EAF3FF" stroke-width="5" />
+              <circle cx="188" cy="8" r="7" fill="#3882F6" />
+              <circle class="reye" cx="168" cy="64" r="9" fill="#FFFFFF" /><circle class="reye" cx="208" cy="64" r="9" fill="#FFFFFF" />
+              <rect x="170" y="86" width="36" height="6" rx="3" fill="#EAF3FF" />
+            </g>
+          </svg>
+          <div class="bubbles">
+            <span class="bub" id="rb1">O ito, gawin mo.</span>
+            <span class="bub" id="rb2">Hoy, Chad, ito, gawin mo.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- L1: 2013 vs 2026 109.9 → 118.6 -->
+      <div id="era" class="clip" data-start="109.9" data-duration="8.7" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Iba na ang labanan</span>
+          <svg class="viz" width="376" height="250" viewBox="0 0 376 250">
+            <g id="e1">
+              <rect x="0" y="0" width="176" height="230" rx="16" fill="rgba(234,243,255,0.12)" stroke="rgba(234,243,255,0.4)" stroke-width="2" />
+              <text x="88" y="52" font-size="40" fill="#EAF3FF" text-anchor="middle" font-family="Poppins">2013</text>
+              <rect x="58" y="80" width="60" height="50" rx="12" fill="#64748b" />
+              <circle cx="76" cy="104" r="6" fill="#fff" /><circle cx="100" cy="104" r="6" fill="#fff" />
+              <text x="88" y="170" font-size="15" fill="#EAF3FF" text-anchor="middle">WAITS FOR</text>
+              <text x="88" y="192" font-size="15" fill="#EAF3FF" text-anchor="middle">ORDERS</text>
+            </g>
+            <g id="e2">
+              <rect x="200" y="0" width="176" height="230" rx="16" fill="#2563EB" stroke="#EAF3FF" stroke-width="3" />
+              <text x="288" y="52" font-size="40" fill="#FFFFFF" text-anchor="middle" font-family="Poppins">2026</text>
+              <g id="bulb"><circle cx="288" cy="102" r="26" fill="#FFC531" /><rect x="276" y="126" width="24" height="12" rx="3" fill="#EAF3FF" /></g>
+              <text x="288" y="170" font-size="15" fill="#FFFFFF" text-anchor="middle">BRINGS IDEAS</text>
+              <text x="288" y="192" font-size="15" fill="#FFFFFF" text-anchor="middle">+ DECISIONS</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- L2: what clients ask 129.9 → 156.4 -->
+      <div id="ask" class="clip" data-start="129.9" data-duration="26.5" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">What clients actually ask</span>
+          <div class="items" data-layout-allow-occlusion>
+            <div class="item" id="dip"><span class="n">?<span class="nx"><svg width="18" height="18" viewBox="0 0 20 20"><path d="M4 4 L16 16 M16 4 L4 16" stroke="#fff" stroke-width="4" stroke-linecap="round" /></svg></span></span><span class="t">"Saan ka nag-aral?"<small>NEVER ASKED</small></span><i class="strike"></i></div>
+          </div>
+          <div class="bubbles">
+            <span class="bub" id="q1">What do you do for a living?</span>
+            <span class="bub alt" id="q2">Tell me about yourself.</span>
+            <span class="bub" id="q3">What have you done for your clients?</span>
+            <span class="bub alt" id="q4">Give me 2 or 3 people you've helped.</span>
+            <span class="bub" id="q5">Send me your portfolio.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- L2: balance 164.6 → 170.5 -->
+      <div id="scale" class="clip" data-start="164.6" data-duration="5.9" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Mas mabigat</span>
+          <span class="headline"><em>Experience</em> &gt; Degree</span>
+          <svg class="viz" width="376" height="200" viewBox="0 0 376 200">
+            <polygon points="188,60 168,190 208,190" fill="#3882F6" />
+            <g id="beam">
+              <rect x="38" y="52" width="300" height="10" rx="5" fill="#EAF3FF" />
+              <line x1="70" y1="57" x2="70" y2="110" stroke="#EAF3FF" stroke-width="3" />
+              <line x1="306" y1="57" x2="306" y2="110" stroke="#EAF3FF" stroke-width="3" />
+              <rect x="22" y="110" width="96" height="12" rx="6" fill="#EAF3FF" />
+              <rect x="258" y="110" width="96" height="12" rx="6" fill="#EAF3FF" />
+              <rect x="40" y="80" width="60" height="28" rx="4" fill="#94a3b8" /><text x="70" y="99" font-size="11" fill="#0B2058" text-anchor="middle">DEGREE</text>
+              <rect x="266" y="58" width="80" height="50" rx="6" fill="#2563EB" stroke="#fff" stroke-width="2" /><text x="306" y="88" font-size="11" fill="#FFFFFF" text-anchor="middle">PORTFOLIO</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Sketch board: L3 not enough → upskill loop 190.4 → 217.2 -->
+      <div id="skb2" class="clip sketch" data-start="190.4" data-duration="26.8" data-track-index="1">
+        <div class="sheet">
+          <div class="edge"></div>
+          <div class="paper">
+            <svg class="grain" width="1180" height="1080"><filter id="skb2-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="4" /><feColorMatrix values="0 0 0 0 0.55  0 0 0 0 0.53  0 0 0 0 0.5  0 0 0 0.35 0" /></filter><rect width="1180" height="1080" filter="url(#skb2-grain)" /></svg>
+            <span class="ink hd" id="skb2-t1" style="left: 110px; top: 90px; font-size: 84px;">Not enough anymore:</span>
+            <span class="ink" id="skb2-n1" style="left: 140px; top: 222px; font-size: 62px;">admin tasks lang</span>
+            <span class="ink" id="skb2-n2" style="left: 140px; top: 292px; font-size: 62px;">handle calls</span>
+            <span class="ink" id="skb2-n3" style="left: 140px; top: 362px; font-size: 62px;">good English</span>
+            <span class="ink" id="skb2-n4" style="left: 140px; top: 432px; font-size: 62px;">this year's skills only</span>
+            <span class="ink hd" id="skb2-t5" style="left: 120px; top: 550px; font-size: 120px;">UPSKILL</span>
+            <span class="ink" id="skb2-t6" style="left: 700px; top: 640px; font-size: 44px;">learn</span>
+            <span class="ink" id="skb2-t7" style="left: 925px; top: 640px; font-size: 44px;">apply</span>
+            <span class="ink" id="skb2-t8" style="left: 760px; top: 790px; font-size: 48px;">never-ending</span>
+            <svg class="draw" width="1180" height="1080">
+              <path id="skb2-s1" class="b" />
+              <path id="skb2-s2" class="b" />
+              <path id="skb2-s3" class="b" />
+              <path id="skb2-s4" class="b" />
+              <path id="skb2-u1" class="b" />
+              <path id="skb2-u2" class="b" />
+              <path id="skb2-lp" class="n" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- L4: refs YouTube + Facebook 265.43 → 268.7 -->
+      <div id="ref-social" class="clip ref" data-start="265.43" data-duration="3.27" data-track-index="16">
+        <div class="card">
+          <div class="glow"></div>
+          <div class="logos"><img id="lg1" src="assets/refs/youtube.svg" alt="YouTube" /><img id="lg2" src="assets/refs/facebook.svg" alt="Facebook" /></div>
+          <div class="tag"><span class="name">YouTube &amp; Facebook</span><span class="sub">Ang dami mong makikita</span></div>
+        </div>
+      </div>
+
+      <!-- Sketch board: L4 choose your circle 269.1 → 289.0 -->
+      <div id="skb3" class="clip sketch" data-start="269.1" data-duration="19.9" data-track-index="1">
+        <div class="sheet">
+          <div class="edge"></div>
+          <div class="paper">
+            <svg class="grain" width="1180" height="1080"><filter id="skb3-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="4" /><feColorMatrix values="0 0 0 0 0.55  0 0 0 0 0.53  0 0 0 0 0.5  0 0 0 0.35 0" /></filter><rect width="1180" height="1080" filter="url(#skb3-grain)" /></svg>
+            <span class="ink hd" id="skb3-t1" style="left: 110px; top: 90px; font-size: 84px;">Choose your circle</span>
+            <span class="ink" id="skb3-t2" style="left: 120px; top: 195px; font-size: 52px;">mga taong susuporta sa'yo</span>
+            <span class="ink hd" id="skb3-t3" style="left: 448px; top: 640px; font-size: 44px;">YOU</span>
+            <svg class="draw" width="1180" height="1080">
+              <path id="skb3-fy" class="n" />
+              <path id="skb3-f1" class="n" />
+              <path id="skb3-f2" class="n" />
+              <path id="skb3-f3" class="n" />
+              <path id="skb3-f4" class="n" />
+              <path id="skb3-ci" class="b" />
+              <path id="skb3-fo" class="n" />
+              <path id="skb3-x1" class="b" stroke-width="7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- L5: HARD RULE stamp 298.6 → 301.4 -->
+      <div id="stamp1" class="clip stamp" data-start="298.6" data-duration="2.8" data-track-index="17">
+        <div class="st" id="st1">HARD RULE<small>LESSON 05</small></div>
+      </div>
+
+      <!-- L5: multiple clients 344.0 → 354.6 -->
+      <div id="multi" class="clip" data-start="344.0" data-duration="10.6" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Don't depend on one</span>
+          <span class="headline">Multiple <em>clients</em></span>
+          <svg class="viz" width="376" height="250" viewBox="0 0 376 250">
+            <line class="ml" x1="70" y1="50" x2="188" y2="190" stroke="#3882F6" stroke-width="5" pathLength="1" stroke-dasharray="1" />
+            <line class="ml" x1="188" y1="40" x2="188" y2="190" stroke="#3882F6" stroke-width="5" pathLength="1" stroke-dasharray="1" />
+            <line class="ml" x1="306" y1="50" x2="188" y2="190" stroke="#3882F6" stroke-width="5" pathLength="1" stroke-dasharray="1" />
+            <g class="mc"><rect x="30" y="20" width="80" height="54" rx="12" fill="#EAF3FF" /><text x="70" y="53" font-size="14" fill="#0B2058" text-anchor="middle">CLIENT A</text></g>
+            <g class="mc"><rect x="148" y="14" width="80" height="54" rx="12" fill="#EAF3FF" /><text x="188" y="47" font-size="14" fill="#0B2058" text-anchor="middle">CLIENT B</text></g>
+            <g class="mc"><rect x="266" y="20" width="80" height="54" rx="12" fill="#EAF3FF" /><text x="306" y="53" font-size="14" fill="#0B2058" text-anchor="middle">CLIENT C</text></g>
+            <g id="myou"><circle cx="188" cy="196" r="44" fill="#2563EB" stroke="#fff" stroke-width="4" /><text x="188" y="204" font-size="22" fill="#fff" text-anchor="middle" font-family="Poppins">YOU</text></g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- L6: one pillar 367.0 → 383.6 -->
+      <div id="pillar" class="clip" data-start="367.0" data-duration="16.6" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Sources of income</span>
+          <span class="headline">Not just <em>VA income</em></span>
+          <svg class="viz" width="376" height="230" viewBox="0 0 376 230">
+            <line x1="20" y1="214" x2="356" y2="214" stroke="rgba(234,243,255,0.5)" stroke-width="3" />
+            <g id="pva"><rect x="40" y="60" width="90" height="152" rx="10" fill="#2563EB" stroke="#fff" stroke-width="3" /><text x="85" y="140" font-size="18" fill="#fff" text-anchor="middle">VA JOB</text></g>
+            <g class="pq"><rect x="146" y="60" width="90" height="152" rx="10" fill="none" stroke="#3882F6" stroke-width="3" stroke-dasharray="10 8" /><text x="191" y="146" font-size="40" fill="#3882F6" text-anchor="middle">?</text></g>
+            <g class="pq"><rect x="252" y="60" width="90" height="152" rx="10" fill="none" stroke="#3882F6" stroke-width="3" stroke-dasharray="10 8" /><text x="297" y="146" font-size="40" fill="#3882F6" text-anchor="middle">?</text></g>
+            <text id="pwarn" x="85" y="40" font-size="16" fill="#EF4444" text-anchor="middle">NO CLIENTS?</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Sketch board: L6 side business doodles 432.4 → 455.8 -->
+      <div id="skb4" class="clip sketch" data-start="432.4" data-duration="23.4" data-track-index="1">
+        <div class="sheet">
+          <div class="edge"></div>
+          <div class="paper">
+            <svg class="grain" width="1180" height="1080"><filter id="skb4-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="4" /><feColorMatrix values="0 0 0 0 0.55  0 0 0 0 0.53  0 0 0 0 0.5  0 0 0 0.35 0" /></filter><rect width="1180" height="1080" filter="url(#skb4-grain)" /></svg>
+            <span class="ink hd" id="skb4-t1" style="left: 110px; top: 80px; font-size: 84px;">Build other income</span>
+            <span class="ink" id="skb4-l1" style="left: 150px; top: 470px; font-size: 52px;">laundry shop</span>
+            <span class="ink" id="skb4-l2" style="left: 630px; top: 470px; font-size: 52px;">hobby</span>
+            <span class="ink" id="skb4-l3" style="left: 190px; top: 790px; font-size: 52px;">ukay</span>
+            <span class="ink" id="skb4-l4" style="left: 600px; top: 790px; font-size: 52px;">coffee shop</span>
+            <svg class="draw" width="1180" height="1080">
+              <path id="skb4-d1" class="n" />
+              <path id="skb4-d2" class="b" />
+              <path id="skb4-d3" class="n" />
+              <path id="skb4-d4" class="n" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- L6: income streams 456.0 → 467.4 -->
+      <div id="streams" class="clip" data-start="456.0" data-duration="11.4" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">At least meron kang</span>
+          <span class="headline">Other <em>income</em></span>
+          <svg class="viz" width="376" height="220" viewBox="0 0 376 220">
+            <line x1="20" y1="200" x2="356" y2="200" stroke="rgba(234,243,255,0.5)" stroke-width="3" />
+            <rect id="sb1x" x="40" y="40" width="80" height="158" rx="8" fill="#2563EB" />
+            <rect id="sb2x" x="148" y="80" width="80" height="118" rx="8" fill="#3882F6" />
+            <rect id="sb3x" x="256" y="100" width="80" height="98" rx="8" fill="#EAF3FF" />
+            <text x="80" y="218" font-size="13" fill="#EAF3FF" text-anchor="middle">VA JOB</text>
+            <text x="188" y="218" font-size="13" fill="#EAF3FF" text-anchor="middle">BUSINESS</text>
+            <text x="296" y="218" font-size="13" fill="#EAF3FF" text-anchor="middle">SIDE INCOME</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- L7: HARD RULE stamp 477.5 → 480.0 -->
+      <div id="stamp2" class="clip stamp" data-start="477.5" data-duration="2.5" data-track-index="17">
+        <div class="st" id="st2">HARD RULE<small>LESSON 07</small></div>
+      </div>
+
+      <!-- L7: spending 500.7 → 507.4 -->
+      <div id="spend" class="clip" data-start="500.7" data-duration="6.7" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Pag kumita na</span>
+          <span class="headline">Todo-todo <em>gastos</em></span>
+          <div class="items">
+            <div class="item" id="sp1"><svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 14 L32 14 L30 36 L10 36 Z" fill="#EAF3FF" /><path d="M14 14 C14 4 26 4 26 14" fill="none" stroke="#EAF3FF" stroke-width="3" /></svg><span class="t">Gastos</span></div>
+            <div class="item" id="sp2"><svg width="40" height="40" viewBox="0 0 40 40"><path d="M4 20 L20 6 L36 20 L36 36 L4 36 Z" fill="#EAF3FF" /><rect x="16" y="24" width="8" height="12" fill="#2563EB" /></svg><span class="t">Labas ng bahay</span></div>
+            <div class="item" id="sp3"><svg width="40" height="40" viewBox="0 0 40 40"><path d="M4 22 L36 12 L38 16 L22 24 L18 36 L14 36 L15 26 L6 28 Z" fill="#EAF3FF" /></svg><span class="t">Bakasyon</span></div>
+          </div>
+          <svg class="viz" width="376" height="40" viewBox="0 0 376 40">
+            <rect x="0" y="10" width="376" height="20" rx="10" fill="rgba(234,243,255,0.2)" />
+            <rect id="drain" x="0" y="10" width="376" height="20" rx="10" fill="#16a34a" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- L7: save + invest 511.7 → 518.6 -->
+      <div id="save" class="clip" data-start="511.7" data-duration="6.9" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Think of the future</span>
+          <span class="headline">Save + <em>invest</em></span>
+          <svg class="viz" width="376" height="200" viewBox="0 0 376 200">
+            <g id="spig">
+              <ellipse cx="90" cy="130" rx="62" ry="44" fill="#3882F6" />
+              <circle cx="150" cy="126" r="14" fill="#2563EB" />
+              <polygon points="110,92 124,74 128,96" fill="#2563EB" />
+              <rect x="78" y="88" width="26" height="6" rx="3" fill="#0B2058" />
+              <rect x="54" y="164" width="12" height="16" rx="3" fill="#2563EB" /><rect x="110" y="164" width="12" height="16" rx="3" fill="#2563EB" />
+            </g>
+            <g id="scoin"><circle cx="91" cy="20" r="14" fill="#FFC531" stroke="#E0A400" stroke-width="3" /></g>
+            <line x1="200" y1="180" x2="360" y2="180" stroke="rgba(234,243,255,0.5)" stroke-width="3" />
+            <polyline id="grow" points="206,166 246,140 280,148 320,100 354,60" fill="none" stroke="#16a34a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" />
+            <g id="umb">
+              <path d="M220 60 C230 20 330 20 340 60 Z" fill="#EAF3FF" />
+              <line x1="280" y1="58" x2="280" y2="110" stroke="#EAF3FF" stroke-width="4" />
+              <path d="M280 110 C280 120 268 120 268 112" fill="none" stroke="#EAF3FF" stroke-width="4" />
+              <line class="rain" x1="226" y1="4" x2="222" y2="16" stroke="#3882F6" stroke-width="3" />
+              <line class="rain" x1="262" y1="0" x2="258" y2="12" stroke="#3882F6" stroke-width="3" />
+              <line class="rain" x1="298" y1="2" x2="294" y2="14" stroke="#3882F6" stroke-width="3" />
+              <line class="rain" x1="334" y1="4" x2="330" y2="16" stroke="#3882F6" stroke-width="3" />
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- L7: tumal 536.9 → 547.6 -->
+      <div id="tumal" class="clip" data-start="536.9" data-duration="10.7" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Hindi laging nandyan</span>
+          <span class="headline">May <em>tumal</em> days</span>
+          <svg class="viz" width="376" height="200" viewBox="0 0 376 200">
+            <line x1="10" y1="186" x2="366" y2="186" stroke="rgba(234,243,255,0.5)" stroke-width="3" />
+            <polyline id="dipline" points="14,60 70,50 120,70 170,150 220,170 270,120 320,70 362,40" fill="none" stroke="#3882F6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" />
+            <g id="dipx"><circle cx="195" cy="160" r="16" fill="#EF4444" /><text x="195" y="166" font-size="16" fill="#fff" text-anchor="middle">!</text></g>
+            <g id="shield"><path d="M320 20 L350 30 L350 60 C350 80 335 92 320 98 C305 92 290 80 290 60 L290 30 Z" fill="#16a34a" stroke="#fff" stroke-width="3" /><polyline points="306,58 316,68 334,46" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" /></g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- L7: emergency fund jar 548.3 → 556.8 -->
+      <div id="jar" class="clip" data-start="548.3" data-duration="8.5" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">Always prepare your</span>
+          <span class="headline">Emergency <em>fund</em></span>
+          <svg class="viz" width="376" height="230" viewBox="0 0 376 230">
+            <defs><clipPath id="jarclip"><rect x="118" y="40" width="140" height="180" rx="26" /></clipPath></defs>
+            <g clip-path="url(#jarclip)"><rect id="jfill" x="118" y="40" width="140" height="180" fill="#16a34a" /></g>
+            <rect x="118" y="40" width="140" height="180" rx="26" fill="none" stroke="#EAF3FF" stroke-width="5" />
+            <rect x="130" y="22" width="116" height="24" rx="8" fill="#3882F6" />
+            <g id="jc1"><circle cx="160" cy="0" r="12" fill="#FFC531" stroke="#E0A400" stroke-width="3" /></g>
+            <g id="jc2"><circle cx="210" cy="0" r="12" fill="#FFC531" stroke="#E0A400" stroke-width="3" /></g>
+            <text x="188" y="150" font-size="22" fill="#FFFFFF" text-anchor="middle" font-family="Poppins">₱</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Recap 557.2 → 568.8 -->
+      <div id="recap" class="clip" data-start="557.2" data-duration="11.6" data-track-index="1">
+        <div class="panel">
+          <div class="bar"></div>
+          <span class="label">7 hard lessons</span>
+          <div class="items">
+            <div class="item" id="rc1"><span class="n">1</span><span class="t">Communication</span></div>
+            <div class="item" id="rc2"><span class="n">2</span><span class="t">Experience &gt; Degree</span></div>
+            <div class="item" id="rc3"><span class="n">3</span><span class="t">Always upskill</span></div>
+            <div class="item" id="rc4"><span class="n">4</span><span class="t">Choose your circle</span></div>
+            <div class="item" id="rc5"><span class="n">5</span><span class="t">Love the job, not the company</span></div>
+            <div class="item" id="rc6"><span class="n">6</span><span class="t">Have a backup plan</span></div>
+            <div class="item" id="rc7"><span class="n">7</span><span class="t">Save &amp; invest</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Like + subscribe 569.0 → 575.4 -->
+      <div id="cta" class="clip" data-start="569.0" data-duration="6.4" data-track-index="4">
+        <div class="row" id="cta-row">
+          <div class="btn like" id="likebtn">
+            <i class="fillb" id="likefill"></i>
+            <svg width="36" height="36" viewBox="0 0 36 36"><path d="M4 16 L10 16 L10 32 L4 32 Z M12 16 L18 4 C21 4 22 6 21 10 L20 14 L30 14 C33 14 34 17 33 19 L30 30 C29 32 28 32 26 32 L12 32 Z" fill="currentColor" /></svg>
+            <span>LIKE</span>
+          </div>
+          <div class="btn sub-btn" id="subbtn" data-layout-allow-overlap>
+            <span>SUBSCRIBE</span><span class="done" id="subdone">SUBSCRIBED</span>
+          </div>
+        </div>
+        <svg class="cursor" id="cursor" width="44" height="54" viewBox="0 0 44 54"><path d="M4 4 L4 44 L14 34 L22 50 L30 46 L22 30 L36 30 Z" fill="#FFFFFF" stroke="#0B2058" stroke-width="3" stroke-linejoin="round" /></svg>
+      </div>
+
+      <!-- End card 579.6 → 583.8 -->
+      <div id="endcard" class="clip" data-start="579.6" data-duration="4.2" data-track-index="8">
+        <div class="bg" id="end-bg"></div><div class="circle1" id="end-c1"></div><div class="circle2" id="end-c2"></div><div class="oring" id="end-ring"></div>
+        <div class="stack">
+          <span class="thanks"><span class="w"><span class="ew">Salamat</span></span> <span class="w"><span class="ew">po!</span></span></span>
+          <div class="cag"><span id="cag1">CREATE</span><i id="cagd1"></i><span id="cag2">AUTOMATE</span><i id="cagd2"></i><span id="cag3">GROW</span></div>
+          <span class="word" id="end-word">Chad <em>Godoy</em></span>
+          <span class="site" id="end-site">chadgodoy.io<i class="ul" id="end-ul"></i></span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      const ease = "power3.out";
+      const SVGNS = "http://www.w3.org/2000/svg";
+
+
+      // ---------- helpers (animate inner nodes only — never .clip) ----------
+      function panelIn(scope, inAt, head = true) {
+        tl.fromTo(`${scope} .panel`, { x: 90, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease }, inAt);
+        tl.fromTo(`${scope} .bar`, { scaleY: 0 }, { scaleY: 1, duration: 0.6, ease }, inAt + 0.15);
+        if (head) tl.fromTo(`${scope} .headline`, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease }, inAt + 0.2);
+      }
+      function panelOut(scope, outAt) {
+        tl.to(`${scope} .panel`, { x: 70, opacity: 0, duration: 0.45, ease: "power2.in" }, outAt - 0.45);
+      }
+      function caption(scope, inAt, outAt, ulAt) {
+        tl.fromTo(`${scope} .cap`, { y: 30, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.45, ease }, inAt);
+        tl.to(`${scope} .cap`, { y: 20, opacity: 0, duration: 0.35, ease: "power2.in" }, outAt - 0.35);
+        if (ulAt !== undefined) tl.fromTo(`${scope} .ul`, { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease }, ulAt);
+      }
+      function chapter(id, inAt, outAt) {
+        tl.fromTo(`${id} .tagbox`, { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease }, inAt);
+        tl.fromTo(`${id} .num`, { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.5, ease: "back.out(2)" }, inAt + 0.1);
+        tl.to(`${id} .tagbox`, { x: -30, opacity: 0, duration: 0.35, ease: "power2.in" }, outAt - 0.35);
+      }
+      function itemOn(sel, at) {
+        tl.fromTo(sel, { opacity: 0.25, x: 30 }, { opacity: 1, x: 0, duration: 0.45, ease, immediateRender: false }, at);
+        tl.fromTo(`${sel} .n`, { scale: 0.4 }, { scale: 1, duration: 0.5, ease: "back.out(2)" }, at + 0.05);
+      }
+      function popIn(sel, at) {
+        tl.fromTo(sel, { scale: 0.4, opacity: 0, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(2)" }, at);
+      }
+      function strike(sel, at) {
+        tl.fromTo(`${sel} .strike`, { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power2.out" }, at);
+        tl.fromTo(`${sel} .nx`, { scale: 0 }, { scale: 1, duration: 0.3, ease: "back.out(3)" }, at);
+        tl.to(`${sel} .t`, { opacity: 0.55, duration: 0.3 }, at + 0.1);
+      }
+      function slam(id, inAt, outAt) {
+        panelIn(id, inAt);
+        tl.fromTo(`${id} .big b`, { scale: 2.2, opacity: 0, transformOrigin: "0% 80%" }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(2)" }, inAt + 0.05);
+        tl.fromTo(`${id} .big span`, { x: -20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.35, ease }, inAt + 0.3);
+        tl.fromTo(`${id} .dots i`, { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.25, ease, stagger: 0.05 }, inAt + 0.35);
+        tl.fromTo(`${id} .dots i.now`, { scale: 1 }, { scale: 1.25, duration: 0.25, yoyo: true, repeat: 3, ease: "sine.inOut", immediateRender: false }, inAt + 0.8);
+        panelOut(id, outAt);
+      }
+      function stamp(id, inAt, outAt) {
+        tl.fromTo(id, { scale: 2.4, opacity: 0, rotation: -24 }, { scale: 1, opacity: 1, rotation: -6, duration: 0.4, ease: "back.out(2.2)" }, inAt);
+        tl.to(id, { scale: 0.8, opacity: 0, duration: 0.3, ease: "power2.in" }, outAt - 0.3);
+      }
+
+      // ---------- camera track: [time, scale, duration, ease] (0 duration = snap) ----------
+      const CAM = [[0.1, 1.06, 5.25, "sine.inOut"], [5.35, 1, 5.25, "sine.inOut"], [10.7, 1.1, 1.2, "power2.inOut"], [15.9, 1, 0.8, "power2.inOut"], [16.8, 1.07, 4.55, "sine.inOut"], [21.35, 1, 4.55, "sine.inOut"], [26.0, 1.12, 0.6, "power2.inOut"], [29.8, 1, 0.6, "power2.inOut"], [30.5, 1.05, 4.28, "sine.inOut"], [34.78, 1, 4.28, "sine.inOut"], [39.16, 1.15, 0, ""], [41.0, 1, 0.5, "power2.inOut"], [45.15, 1.08, 0, ""], [46.14, 1.14, 0, ""], [46.39, 1.2, 0, ""], [47.6, 1, 0.6, "power2.inOut"], [49.35, 1.1, 0, ""], [51.2, 1, 0.5, "power2.inOut"], [51.8, 1.06, 9.55, "sine.inOut"], [61.35, 1, 9.55, "sine.inOut"], [71.1, 1.07, 9.55, "sine.inOut"], [80.65, 1, 9.55, "sine.inOut"], [90.3, 1.12, 0.5, "power2.inOut"], [92.4, 1, 0.6, "power2.inOut"], [93.1, 1.05, 6.79, "sine.inOut"], [99.89, 1, 6.79, "sine.inOut"], [106.78, 1.2, 0, ""], [108.9, 1, 0.5, "power2.inOut"], [109.5, 1.06, 4.6, "sine.inOut"], [114.1, 1, 4.6, "sine.inOut"], [118.8, 1.15, 0, ""], [120.6, 1, 0.5, "power2.inOut"], [121.2, 1.07, 7.17, "sine.inOut"], [128.37, 1, 7.17, "sine.inOut"], [135.73, 1.05, 7.17, "sine.inOut"], [142.9, 1, 7.17, "sine.inOut"], [150.27, 1.06, 7.17, "sine.inOut"], [157.43, 1, 7.17, "sine.inOut"], [164.7, 1.14, 0.6, "power2.inOut"], [168.2, 1, 0.6, "power2.inOut"], [170.96, 1.15, 0, ""], [172.8, 1, 0.5, "power2.inOut"], [173.4, 1.07, 2.36, "sine.inOut"], [175.76, 1, 2.36, "sine.inOut"], [178.22, 1.12, 0, ""], [179.4, 1, 0.5, "power2.inOut"], [180.0, 1.05, 11.35, "sine.inOut"], [191.35, 1, 11.35, "sine.inOut"], [202.8, 1.12, 0.6, "power2.inOut"], [208.9, 1, 0.7, "power2.inOut"], [209.7, 1.06, 5.28, "sine.inOut"], [214.98, 1, 5.28, "sine.inOut"], [220.36, 1.18, 0, ""], [222.4, 1, 0.5, "power2.inOut"], [223.0, 1.07, 5.3, "sine.inOut"], [228.3, 1, 5.3, "sine.inOut"], [233.7, 1.22, 0.8, "power2.inOut"], [239.3, 1, 0.7, "power2.inOut"], [241.98, 1.15, 0, ""], [243.8, 1, 0.5, "power2.inOut"], [244.4, 1.05, 4.05, "sine.inOut"], [248.45, 1, 4.05, "sine.inOut"], [252.6, 1.12, 0.6, "power2.inOut"], [256.5, 1, 0.6, "power2.inOut"], [257.2, 1.06, 6.97, "sine.inOut"], [264.18, 1, 6.97, "sine.inOut"], [271.35, 1.07, 6.97, "sine.inOut"], [278.32, 1, 6.97, "sine.inOut"], [285.4, 1.14, 0.5, "power2.inOut"], [288.0, 1, 0.6, "power2.inOut"], [288.7, 1.05, 2.21, "sine.inOut"], [290.92, 1, 2.21, "sine.inOut"], [293.23, 1.15, 0, ""], [295.2, 1, 0.5, "power2.inOut"], [298.6, 1.12, 0.4, "power2.inOut"], [300.9, 1, 0.6, "power2.inOut"], [301.6, 1.06, 9.45, "sine.inOut"], [311.05, 1, 9.45, "sine.inOut"], [320.6, 1.22, 0.7, "power2.inOut"], [323.8, 1, 0.6, "power2.inOut"], [324.5, 1.07, 3.78, "sine.inOut"], [328.29, 1, 3.78, "sine.inOut"], [332.17, 1.18, 0, ""], [334.4, 1, 0.5, "power2.inOut"], [335.4, 1.12, 0.6, "power2.inOut"], [342.3, 1, 0.6, "power2.inOut"], [343.0, 1.05, 7.08, "sine.inOut"], [350.08, 1, 7.08, "sine.inOut"], [357.26, 1.15, 0, ""], [359.2, 1, 0.5, "power2.inOut"], [359.8, 1.06, 5.99, "sine.inOut"], [365.8, 1, 5.99, "sine.inOut"], [371.99, 1.07, 5.99, "sine.inOut"], [377.99, 1, 5.99, "sine.inOut"], [384.08, 1.22, 0, ""], [385.6, 1, 0.5, "power2.inOut"], [386.2, 1.05, 5.4, "sine.inOut"], [391.6, 1, 5.4, "sine.inOut"], [397.1, 1.14, 0.6, "power2.inOut"], [403.9, 1, 0.6, "power2.inOut"], [404.6, 1.06, 2.55, "sine.inOut"], [407.15, 1, 2.55, "sine.inOut"], [409.8, 1.1, 0.6, "power2.inOut"], [414.2, 1, 0.6, "power2.inOut"], [414.9, 1.07, 6.36, "sine.inOut"], [421.26, 1, 6.36, "sine.inOut"], [427.72, 1.18, 0, ""], [428.8, 1, 0.5, "power2.inOut"], [429.4, 1.05, 6.67, "sine.inOut"], [436.07, 1, 6.67, "sine.inOut"], [442.94, 1.06, 6.67, "sine.inOut"], [449.61, 1, 6.67, "sine.inOut"], [456.47, 1.07, 6.67, "sine.inOut"], [463.14, 1, 6.67, "sine.inOut"], [469.91, 1.15, 0, ""], [471.8, 1, 0.5, "power2.inOut"], [472.4, 1.05, 2.75, "sine.inOut"], [475.15, 1, 2.75, "sine.inOut"], [478.0, 1.14, 0.4, "power2.inOut"], [481.9, 1, 0.6, "power2.inOut"], [482.6, 1.06, 2.84, "sine.inOut"], [485.44, 1, 2.84, "sine.inOut"], [488.39, 1.15, 0, ""], [489.6, 1, 0.5, "power2.inOut"], [490.2, 1.07, 4.59, "sine.inOut"], [494.79, 1, 4.59, "sine.inOut"], [499.48, 1.15, 0, ""], [500.4, 1, 0.5, "power2.inOut"], [501.0, 1.05, 6.95, "sine.inOut"], [507.95, 1, 6.95, "sine.inOut"], [515.0, 1.14, 0.5, "power2.inOut"], [517.8, 1, 0.6, "power2.inOut"], [518.5, 1.06, 7.37, "sine.inOut"], [525.88, 1, 7.37, "sine.inOut"], [533.45, 1.07, 7.37, "sine.inOut"], [540.82, 1, 7.37, "sine.inOut"], [548.3, 1.14, 0.5, "power2.inOut"], [550.6, 1, 0.6, "power2.inOut"], [551.3, 1.05, 8.8, "sine.inOut"], [560.1, 1, 8.8, "sine.inOut"], [569.0, 1.08, 0.8, "power2.inOut"], [574.6, 1, 0.8, "power2.inOut"]];
+      let camPrev = 1;
+      CAM.forEach(([t, s, d, e]) => {
+        if (d === 0) tl.set("#cam", { scale: s }, t);
+        else tl.fromTo("#cam", { scale: camPrev }, { scale: s, duration: d, ease: e, immediateRender: false }, t);
+        camPrev = s;
+      });
+
+
+      // ===== Sketch helpers (deterministic: seeded RNG, paths built at load) =====
+      function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+      function tornEdge(sel, W, seed, extra) {
+        const r = rng(seed); const pts = ["0px 0px"];
+        for (let y = 0; y <= 1080; y += 9) { const x = W + extra + Math.sin(y / 70 + seed) * 10 + (r() - 0.5) * 22; pts.push(`${x.toFixed(1)}px ${y}px`); }
+        pts.push("0px 1080px");
+        document.querySelectorAll(sel).forEach(el => el.style.clipPath = `polygon(${pts.join(",")})`);
+      }
+      function wobble(points, seed, amt = 3) {
+        const r = rng(seed); let d = "";
+        points.forEach(([x, y], i) => {
+          const jx = x + (r() - 0.5) * amt, jy = y + (r() - 0.5) * amt;
+          if (i === 0) d += `M${jx.toFixed(1)} ${jy.toFixed(1)}`;
+          else { const [px, py] = points[i - 1]; const mx = (px + x) / 2 + (r() - 0.5) * amt * 2, my = (py + y) / 2 + (r() - 0.5) * amt * 2; d += ` Q${mx.toFixed(1)} ${my.toFixed(1)} ${jx.toFixed(1)} ${jy.toFixed(1)}`; }
+        });
+        return d;
+      }
+      const sk = {
+        line: (x1, y1, x2, y2, seed) => wobble([[x1, y1], [(x1 + x2) / 2, (y1 + y2) / 2 + 3], [x2, y2]], seed),
+        rect: (x, y, w, h, seed) => wobble([[x + 6, y - 4], [x + w, y], [x + w + 3, y + h], [x, y + h + 2], [x - 2, y + 2], [x + 18, y - 6]], seed, 5),
+        ellipse: (cx, cy, rx, ry, seed) => { const p = []; for (let i = 0; i <= 26; i++) { const a = -2.2 + (i / 24) * Math.PI * 2; const k = 1 + i * 0.004; p.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]); } return wobble(p, seed, 4); },
+        arrowShaft: (pts, seed) => wobble(pts, seed, 3),
+        arrowHead: (x, y, ang, seed, len = 28) => { const a1 = ang + 2.6, a2 = ang - 2.6; return wobble([[x + Math.cos(a1) * len, y + Math.sin(a1) * len], [x, y], [x + Math.cos(a2) * len, y + Math.sin(a2) * len]], seed, 2); },
+        check: (x, y, s, seed) => wobble([[x, y], [x + s * 0.35, y + s * 0.4], [x + s, y - s * 0.55]], seed, 2),
+        cross: (x, y, s, seed) => wobble([[x - s, y - s], [x + s, y + s]], seed, 2) + " " + wobble([[x + s, y - s], [x - s, y + s]], seed + 1, 2),
+        loop: (cx, cy, a, b, seed) => { const p = []; for (let i = 0; i <= 44; i++) { const t = (i / 44) * Math.PI * 2; p.push([cx + a * Math.sin(t), cy + b * Math.sin(t) * Math.cos(t)]); } return wobble(p, seed, 3); },
+        figure: (x, y, s, seed) => sk.ellipse(x, y, 17 * s, 19 * s, seed) + " " + wobble([[x, y + 20 * s], [x, y + 78 * s]], seed + 1, 2) + " " + wobble([[x - 32 * s, y + 46 * s], [x, y + 34 * s], [x + 32 * s, y + 46 * s]], seed + 2, 2) + " " + wobble([[x - 26 * s, y + 120 * s], [x, y + 78 * s], [x + 26 * s, y + 120 * s]], seed + 3, 2),
+        washer: (x, y, seed) => sk.rect(x - 75, y - 90, 150, 175, seed) + " " + sk.ellipse(x, y + 8, 46, 46, seed + 1) + " " + sk.line(x - 55, y - 66, x - 15, y - 66, seed + 2),
+        star: (x, y, seed) => { const p = []; for (let i = 0; i <= 10; i++) { const a = -Math.PI / 2 + (i / 10) * Math.PI * 2; const r = i % 2 ? 36 : 82; p.push([x + Math.cos(a) * r, y + Math.sin(a) * r]); } return wobble(p, seed, 3); },
+        shirt: (x, y, seed) => wobble([[x - 30, y - 72], [x - 78, y - 46], [x - 56, y - 8], [x - 40, y - 20], [x - 40, y + 76], [x + 40, y + 76], [x + 40, y - 20], [x + 56, y - 8], [x + 78, y - 46], [x + 30, y - 72], [x, y - 54], [x - 30, y - 72]], seed, 3),
+        cup: (x, y, seed) => wobble([[x - 55, y - 40], [x - 44, y + 70], [x + 44, y + 70], [x + 55, y - 40], [x - 55, y - 40]], seed, 3) + " " + wobble([[x + 52, y - 12], [x + 88, y - 2], [x + 84, y + 32], [x + 46, y + 38]], seed + 1, 2) + " " + wobble([[x - 18, y - 56], [x - 30, y - 80], [x - 14, y - 104]], seed + 2, 2) + " " + wobble([[x + 16, y - 56], [x + 4, y - 80], [x + 20, y - 104]], seed + 3, 2)
+      };
+      function setPath(id, d) { const el = document.getElementById(id); el.setAttribute("d", d); el.setAttribute("pathLength", "1"); el.setAttribute("stroke-dasharray", "1"); el.setAttribute("stroke-dashoffset", "1"); }
+      // board in/out: paper slides from the left, Chad shifts right, small subtitles move onto the paper
+      function sketchIn(id, t, camShift = 420) {
+        tl.fromTo(`${id} .sheet`, { x: -1220 }, { x: 0, duration: 0.6, ease: "power3.out" }, t);
+        tl.fromTo("#cam", { x: 0 }, { x: camShift, duration: 0.6, ease: "power3.out", immediateRender: false }, t);
+        tl.fromTo("#subs .sub-wrap", { x: 0 }, { x: -385, duration: 0.6, ease: "power3.out", immediateRender: false }, t);
+      }
+      function sketchOut(id, t, camShift = 420) {
+        tl.to(`${id} .sheet`, { x: -1220, duration: 0.45, ease: "power2.in" }, t - 0.45);
+        tl.fromTo("#cam", { x: camShift }, { x: 0, duration: 0.45, ease: "power2.in", immediateRender: false }, t - 0.45);
+        tl.fromTo("#subs .sub-wrap", { x: -385 }, { x: 0, duration: 0.45, ease: "power2.in", immediateRender: false }, t - 0.45);
+      }
+      function write(sel, t, cps = 16) {
+        const n = document.querySelector(sel).textContent.length;
+        tl.fromTo(sel, { clipPath: "inset(-20% 100% -20% 0%)" }, { clipPath: "inset(-20% 0% -20% 0%)", duration: Math.max(0.35, n / cps), ease: "none" }, t);
+      }
+      function draw(sel, t, dur = 0.6) { tl.fromTo(sel, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: dur, ease: "power1.inOut" }, t); }
+      ["#skb1", "#skb2", "#skb3", "#skb4"].forEach((id, i) => { tornEdge(`${id} .paper`, 1150, 3 + i, 0); tornEdge(`${id} .edge`, 1150, 3 + i, 7); });
+
+      // ---------- Board 1 · L1 why clients hire 62.4 → 85.4 ----------
+      setPath("skb1-u1", sk.line(110, 205, 760, 199, 21));
+      setPath("skb1-s1", sk.line(108, 304, 262, 298, 22));
+      setPath("skb1-s2", sk.line(318, 304, 402, 298, 23));
+      setPath("skb1-s3", sk.line(458, 304, 900, 296, 24));
+      setPath("skb1-c1", sk.ellipse(455, 476, 360, 82, 25));
+      setPath("skb1-a1", sk.arrowShaft([[455, 566], [445, 610], [455, 652]], 26));
+      setPath("skb1-a2", sk.arrowHead(455, 652, Math.PI / 2, 27));
+      setPath("skb1-u2", sk.line(160, 770, 760, 764, 28));
+      sketchIn("#skb1", 62.4);
+      write("#skb1-t1", 62.9, 17); draw("#skb1-u1", 64.3, 0.5);
+      write("#skb1-t2a", 66.58, 16); write("#skb1-t2b", 67.53, 16); write("#skb1-t2c", 69.1, 18);
+      draw("#skb1-s1", 71.76, 0.25); draw("#skb1-s2", 71.98, 0.2); draw("#skb1-s3", 72.15, 0.4);
+      write("#skb1-t3", 74.23, 17); draw("#skb1-c1", 75.5, 0.75);
+      draw("#skb1-a1", 78.5, 0.4); draw("#skb1-a2", 78.9, 0.22);
+      write("#skb1-t4", 82.9, 18); draw("#skb1-u2", 84.0, 0.35);
+      sketchOut("#skb1", 85.4);
+
+      // ---------- Board 2 · L3 not enough → upskill loop 190.4 → 217.2 ----------
+      setPath("skb2-s1", sk.line(128, 262, 572, 256, 31));
+      setPath("skb2-s2", sk.line(128, 332, 472, 326, 32));
+      setPath("skb2-s3", sk.line(128, 402, 476, 396, 33));
+      setPath("skb2-s4", sk.line(128, 472, 760, 464, 34));
+      setPath("skb2-u1", sk.line(118, 695, 560, 687, 35));
+      setPath("skb2-u2", sk.line(130, 712, 540, 706, 36));
+      setPath("skb2-lp", sk.loop(850, 662, 210, 190, 37));
+      sketchIn("#skb2", 190.4);
+      write("#skb2-t1", 190.8, 17);
+      write("#skb2-n1", 192.25, 18); write("#skb2-n2", 193.67, 18); write("#skb2-n3", 195.55, 18); write("#skb2-n4", 198.13, 18);
+      draw("#skb2-s1", 202.2, 0.22); draw("#skb2-s2", 202.36, 0.2); draw("#skb2-s3", 202.52, 0.2); draw("#skb2-s4", 202.68, 0.3);
+      write("#skb2-t5", 205.24, 10); draw("#skb2-u1", 206.0, 0.4); draw("#skb2-u2", 206.42, 0.35);
+      draw("#skb2-lp", 210.82, 1.4); write("#skb2-t6", 211.2, 12); write("#skb2-t7", 212.1, 12); write("#skb2-t8", 212.8, 14);
+      sketchOut("#skb2", 217.2);
+
+      // ---------- Board 3 · L4 choose your circle 269.1 → 289.0 ----------
+      setPath("skb3-fy", sk.figure(480, 452, 1.3, 41));
+      setPath("skb3-f1", sk.figure(230, 360, 0.9, 42));
+      setPath("skb3-f2", sk.figure(730, 360, 0.9, 43));
+      setPath("skb3-f3", sk.figure(220, 600, 0.9, 44));
+      setPath("skb3-f4", sk.figure(740, 600, 0.9, 45));
+      setPath("skb3-ci", sk.ellipse(480, 540, 390, 228, 46));
+      setPath("skb3-fo", sk.figure(1010, 470, 0.9, 47));
+      setPath("skb3-x1", sk.cross(1010, 520, 60, 48));
+      sketchIn("#skb3", 269.1);
+      write("#skb3-t1", 269.5, 17); write("#skb3-t2", 270.97, 18);
+      draw("#skb3-fy", 272.4, 0.8); write("#skb3-t3", 273.2, 10);
+      ["#skb3-f1", "#skb3-f2", "#skb3-f3", "#skb3-f4"].forEach((s, i) => draw(s, 280.43 + i * 0.35, 0.5));
+      draw("#skb3-ci", 284.19, 0.8);
+      draw("#skb3-fo", 285.5, 0.45); draw("#skb3-x1", 286.26, 0.35);
+      sketchOut("#skb3", 289.0);
+
+      // ---------- Board 4 · L6 side business doodles 432.4 → 455.8 ----------
+      setPath("skb4-d1", sk.washer(250, 340, 51));
+      setPath("skb4-d2", sk.star(700, 340, 52));
+      setPath("skb4-d3", sk.shirt(250, 670, 53));
+      setPath("skb4-d4", sk.cup(690, 670, 54));
+      sketchIn("#skb4", 432.4);
+      write("#skb4-t1", 432.8, 17);
+      draw("#skb4-d1", 433.07, 0.8); write("#skb4-l1", 433.9, 16);
+      draw("#skb4-d2", 439.13, 0.8); write("#skb4-l2", 439.9, 14);
+      draw("#skb4-d3", 444.06, 0.8); write("#skb4-l3", 444.8, 12);
+      draw("#skb4-d4", 446.9, 0.8); write("#skb4-l4", 447.6, 16);
+      sketchOut("#skb4", 455.8);
+
+      // ---------- progress, swipe ----------
+      tl.fromTo("#progress-fill", { scaleX: 0 }, { scaleX: 1, duration: 579.6, ease: "none" }, 0);
+      tl.fromTo(["#sb1", "#sb2", "#sb3"], { x: 0, skewX: -18 }, { x: 3200, skewX: -18, duration: 1.0, ease: "power2.inOut", stagger: 0.06 }, 0);
+
+
+      // ---------- 12 years staircase 1.3 → 10.6 ----------
+      panelIn("#roles", 1.3, false);
+      const rc = { v: 0 };
+      tl.fromTo(rc, { v: 0 }, { v: 12, duration: 1.3, ease: "power2.out", onUpdate: () => { document.getElementById("r-num").textContent = Math.round(rc.v); } }, 1.6);
+      tl.fromTo("#r-num", { scale: 1 }, { scale: 1.15, transformOrigin: "0% 50%", duration: 0.2, yoyo: true, repeat: 1, ease: "power2.out", immediateRender: false }, 2.95);
+      tl.set("#roles .st", { opacity: 0.18 }, 1.3);
+      tl.set("#flag", { opacity: 0 }, 1.3);
+      [3.16, 4.37, 6.43, 8.89].forEach((t, i) => {
+        tl.fromTo(`#st${i + 1}x`, { opacity: 0.18, y: 20 }, { opacity: 1, y: 0, duration: 0.45, ease: "back.out(2)", immediateRender: false }, t);
+      });
+      tl.fromTo("#climber", { x: 46, y: 262, opacity: 0 }, {
+        keyframes: [
+          { opacity: 1, duration: 0.01 },
+          { x: 46, y: 186, duration: 0.4, ease: "back.out(2)" },
+          { x: 46, y: 186, duration: 0.8 },
+          { x: 140, y: 136, duration: 0.4, ease: "power2.out" },
+          { x: 140, y: 136, duration: 1.66 },
+          { x: 234, y: 86, duration: 0.4, ease: "power2.out" },
+          { x: 234, y: 86, duration: 2.06 },
+          { x: 300, y: 36, duration: 0.4, ease: "power2.out" }
+        ]
+      }, 3.16);
+      tl.fromTo("#flag", { opacity: 0, scaleY: 0, svgOrigin: "328 52" }, { opacity: 1, scaleY: 1, svgOrigin: "328 52", duration: 0.4, ease: "back.out(2.5)", immediateRender: false }, 9.3);
+      panelOut("#roles", 10.6);
+
+      // ---------- lower third 10.7 → 16.6 ----------
+      tl.fromTo("#lower .lt", { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease }, 10.7);
+      tl.fromTo("#lower .lt-body", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.7, ease }, 10.85);
+      tl.fromTo("#lt-shine", { x: -140 }, { x: 640, duration: 0.9, ease: "power2.inOut" }, 11.7);
+      tl.to("#lower .lt", { x: -40, opacity: 0, duration: 0.45, ease: "power2.in" }, 16.15);
+
+      // ---------- chapters, captions, slams ----------
+      chapter("#ch0", 5.0, 38.7);
+      chapter("#ch1", 38.9, 118.5);
+      chapter("#ch2", 118.7, 170.7);
+      chapter("#ch3", 170.9, 241.7);
+      chapter("#ch4", 241.9, 290.8);
+      chapter("#ch5", 291.0, 354.8);
+      chapter("#ch6", 355.0, 469.4);
+      chapter("#ch7", 469.6, 556.9);
+      chapter("#ch8", 557.0, 579.4);
+      caption("#c12y", 26.0, 30.4, 28.55);
+      caption("#ccomm", 90.3, 92.8, 90.94);
+      caption("#cexp", 164.7, 168.6, 165.15);
+      caption("#ctamad", 233.7, 239.6, 236.08);
+      caption("#csupport", 252.6, 256.9, 254.95);
+      caption("#creplace", 320.6, 324.3, 322.23);
+      caption("#ccompany", 335.4, 342.8, 341.88);
+      caption("#cjustva", 397.1, 404.4, 403.06);
+      caption("#ccash", 409.8, 414.6, 413.6);
+      caption("#cwalang", 480.1, 482.4, 480.22);
+      caption("#crainy", 515.0, 518.2, 515.36);
+      caption("#cfund", 548.3, 551.0, 549.26);
+      slam("#slam1", 39.0, 51.6);
+      slam("#slam2", 118.7, 123.4);
+      slam("#slam3", 170.9, 175.4);
+      slam("#slam4", 241.9, 249.3);
+      slam("#slam5", 291.0, 298.4);
+      slam("#slam6", 355.0, 361.5);
+      slam("#slam7", 469.6, 476.8);
+      [["#v1", 45.15], ["#v2", 46.14], ["#v3", 46.39], ["#v4", 46.78]].forEach(([s, t]) => tl.fromTo(s, { scale: 2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(2.5)" }, t));
+      tl.fromTo(["#v1", "#v2", "#v3"], { y: 0 }, { y: -6, duration: 0.15, yoyo: true, repeat: 3, ease: "sine.inOut", stagger: 0.1, immediateRender: false }, 49.35);
+      tl.fromTo("#lj1", { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(2.5)" }, 294.78);
+      tl.fromTo("#lj2", { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(2.5)" }, 296.3);
+      tl.fromTo("#lj2", { x: 0 }, { x: 6, duration: 0.06, yoyo: true, repeat: 5, ease: "none", immediateRender: false }, 296.7);
+
+      // ---------- L1 robot 103.8 → 109.0 ----------
+      panelIn("#robot", 103.8);
+      popIn("#rb", 104.2);
+      tl.fromTo("#robot .reye", { scaleY: 1, transformOrigin: "50% 50%" }, { scaleY: 0.1, duration: 0.08, yoyo: true, repeat: 1 }, 106.4);
+      tl.fromTo("#rb", { rotation: 0 }, { rotation: 6, svgOrigin: "188 110", duration: 0.12, yoyo: true, repeat: 5, ease: "sine.inOut", immediateRender: false }, 106.78);
+      tl.fromTo("#rb1", { x: -20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.35, ease }, 105.42);
+      tl.fromTo("#rb2", { x: -20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.35, ease }, 106.78);
+      panelOut("#robot", 109.0);
+
+      // ---------- L1 era 109.9 → 118.6 ----------
+      panelIn("#era", 109.9, false);
+      tl.fromTo("#e1", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease }, 112.8);
+      tl.fromTo("#e2", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease }, 114.7);
+      tl.to("#e1", { opacity: 0.45, duration: 0.4 }, 115.2);
+      tl.fromTo("#bulb", { scale: 1, transformOrigin: "50% 50%" }, { scale: 1.2, duration: 0.25, yoyo: true, repeat: 3, ease: "sine.inOut", immediateRender: false }, 116.28);
+      panelOut("#era", 118.6);
+
+      // ---------- L2 ask 129.9 → 156.4 ----------
+      panelIn("#ask", 129.9, false);
+      tl.fromTo("#dip", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.4, ease }, 130.2);
+      strike("#dip", 134.6);
+      [["#q1", 138.0], ["#q2", 139.85], ["#q3", 142.0], ["#q4", 144.06], ["#q5", 147.81]].forEach(([s, t]) => popIn(s, t));
+      tl.fromTo("#q5", { scale: 1 }, { scale: 1.06, duration: 0.25, yoyo: true, repeat: 3, ease: "sine.inOut", immediateRender: false }, 149.27);
+      panelOut("#ask", 156.4);
+
+      // ---------- L2 scale 164.6 → 170.5 ----------
+      panelIn("#scale", 164.6);
+      tl.fromTo("#beam", { rotation: 0 }, { rotation: 10, svgOrigin: "188 57", duration: 0.9, ease: "back.out(2)" }, 165.2);
+      panelOut("#scale", 170.5);
+
+      // ---------- L4 refs + network ----------
+      tl.fromTo("#ref-social .glow", { scale: 0.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "power2.out" }, 265.43);
+      popIn("#lg1", 265.43); popIn("#lg2", 266.46);
+      tl.fromTo("#ref-social .tag", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease }, 265.7);
+      tl.to("#ref-social .card", { scale: 0.85, opacity: 0, duration: 0.3, ease: "power2.in" }, 268.4);
+
+      // ---------- L5 ----------
+      stamp("#st1", 298.88, 301.4);
+      panelIn("#multi", 344.0);
+      tl.fromTo("#multi .mc", { y: -20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "back.out(2)", stagger: 0.6 }, 346.08);
+      tl.fromTo("#multi .ml", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease, stagger: 0.6 }, 346.3);
+      popIn("#myou", 344.4);
+      panelOut("#multi", 354.6);
+
+      // ---------- L6 pillar 367.0 → 383.6 ----------
+      panelIn("#pillar", 367.0);
+      tl.fromTo("#pva", { scaleY: 0, transformOrigin: "50% 100%" }, { scaleY: 1, duration: 0.6, ease: "back.out(1.6)" }, 368.15);
+      tl.fromTo("#pillar .pq", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease, stagger: 0.3 }, 369.64);
+      tl.set("#pwarn", { opacity: 0 }, 367.0);
+      tl.fromTo("#pva", { rotation: 0, y: 0 }, { rotation: 16, y: 30, svgOrigin: "130 212", duration: 0.6, ease: "power2.in", immediateRender: false }, 380.25);
+      tl.to("#pva rect", { fill: "#EF4444", duration: 0.3 }, 380.25);
+      tl.fromTo("#pwarn", { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, 380.4);
+      panelOut("#pillar", 383.6);
+
+      // ---------- L6 streams 456.0 → 467.4 ----------
+      panelIn("#streams", 456.0);
+      tl.fromTo("#sb1x", { scaleY: 0, transformOrigin: "50% 100%" }, { scaleY: 1, duration: 0.5, ease }, 456.3);
+      tl.fromTo("#sb1x", { scaleY: 1 }, { scaleY: 0.35, transformOrigin: "50% 100%", duration: 0.6, ease: "power2.in", immediateRender: false }, 458.46);
+      tl.set(["#sb2x", "#sb3x"], { scaleY: 0, transformOrigin: "50% 100%" }, 456.0);
+      tl.fromTo("#sb2x", { scaleY: 0 }, { keyframes: [{ scaleY: 0.9, duration: 0.3 }, { scaleY: 0.5, duration: 0.3 }, { scaleY: 1, duration: 0.4 }], transformOrigin: "50% 100%", ease: "sine.inOut", immediateRender: false }, 462.3);
+      tl.fromTo("#sb3x", { scaleY: 0 }, { scaleY: 1, transformOrigin: "50% 100%", duration: 0.5, ease: "back.out(2)", immediateRender: false }, 465.18);
+      panelOut("#streams", 467.4);
+
+      // ---------- L7 ----------
+      stamp("#st2", 478.0, 480.0);
+      panelIn("#spend", 500.7);
+      tl.set(["#sp1", "#sp2", "#sp3"], { opacity: 0 }, 500.7);
+      [["#sp1", 502.01], ["#sp2", 503.28], ["#sp3", 505.08]].forEach(([s, t]) => tl.fromTo(s, { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.4, ease: "back.out(2)", immediateRender: false }, t));
+      tl.fromTo("#drain", { scaleX: 1, transformOrigin: "0% 50%" }, { scaleX: 0.08, duration: 4.0, ease: "power1.in" }, 502.0);
+      tl.to("#drain", { fill: "#EF4444", duration: 1.0 }, 504.5);
+      panelOut("#spend", 507.4);
+
+      panelIn("#save", 511.7);
+      popIn("#spig", 512.0);
+      tl.fromTo("#scoin", { y: 0, opacity: 0 }, { y: 70, opacity: 1, duration: 0.45, ease: "power2.in" }, 512.62);
+      tl.to("#scoin", { opacity: 0, duration: 0.1 }, 513.07);
+      tl.fromTo("#grow", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.0, ease: "power2.out" }, 513.88);
+      tl.fromTo("#umb", { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "back.out(2)" }, 515.36);
+      tl.fromTo("#save .rain", { y: -6 }, { y: 6, duration: 0.3, repeat: 7, ease: "none" }, 515.5);
+      panelOut("#save", 518.6);
+
+      panelIn("#tumal", 536.9);
+      tl.fromTo("#dipline", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 4.5, ease: "power1.inOut" }, 537.2);
+      popIn("#dipx", 538.07);
+      tl.set("#shield", { opacity: 0 }, 536.9);
+      tl.fromTo("#shield", { scale: 0, opacity: 0, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(2.5)", immediateRender: false }, 544.59);
+      panelOut("#tumal", 547.6);
+
+      panelIn("#jar", 548.3);
+      tl.fromTo("#jfill", { y: 180 }, { y: 70, duration: 1.4, ease: "power2.out" }, 549.9);
+      tl.fromTo("#jc1", { y: 0, opacity: 0 }, { y: 120, opacity: 1, duration: 0.45, ease: "power2.in" }, 552.76);
+      tl.to("#jc1", { opacity: 0, duration: 0.1 }, 553.21);
+      tl.fromTo("#jc2", { y: 0, opacity: 0 }, { y: 120, opacity: 1, duration: 0.45, ease: "power2.in" }, 553.3);
+      tl.to("#jc2", { opacity: 0, duration: 0.1 }, 553.75);
+      tl.fromTo("#jfill", { y: 70 }, { y: 20, duration: 0.8, ease: "back.out(2)", immediateRender: false }, 553.4);
+      panelOut("#jar", 556.8);
+
+      // ---------- recap 557.2 → 568.8 ----------
+      panelIn("#recap", 557.2, false);
+      tl.set(["#rc1", "#rc2", "#rc3", "#rc4", "#rc5", "#rc6", "#rc7"], { opacity: 0.25 }, 557.2);
+      ["#rc1", "#rc2", "#rc3", "#rc4", "#rc5", "#rc6", "#rc7"].forEach((s, i) => itemOn(s, 558.6 + i * 0.45));
+      panelOut("#recap", 568.8);
+
+      // ---------- like + subscribe 569.0 → 575.4 ----------
+      tl.fromTo(["#likebtn", "#subbtn"], { y: 40, opacity: 0, scale: 0.8 }, { y: 0, opacity: 1, scale: 1, duration: 0.45, ease: "back.out(2)", stagger: 0.12 }, 569.05);
+      tl.set("#likefill", { scale: 0 }, 569.0);
+      tl.set("#subdone", { opacity: 0 }, 569.0);
+      tl.fromTo("#cursor", { x: 1500, y: 900, opacity: 0 }, {
+        keyframes: [
+          { opacity: 1, duration: 0.15 },
+          { x: 820, y: 838, duration: 0.45, ease: "power2.inOut" },
+          { x: 820, y: 838, duration: 0.95 },
+          { x: 1080, y: 838, duration: 0.5, ease: "power2.inOut" }
+        ]
+      }, 569.15);
+      tl.fromTo("#likebtn", { scale: 1 }, { scale: 0.92, duration: 0.1, yoyo: true, repeat: 1, ease: "power2.out", immediateRender: false }, 569.78);
+      tl.fromTo("#likefill", { scale: 0 }, { scale: 1.2, duration: 0.35, ease: "power2.out", immediateRender: false }, 569.78);
+      tl.to("#likebtn", { color: "#ffffff", duration: 0.2 }, 569.83);
+      tl.fromTo("#subbtn", { scale: 1 }, { scale: 0.92, duration: 0.1, yoyo: true, repeat: 1, ease: "power2.out", immediateRender: false }, 571.3);
+      tl.fromTo("#subdone", { opacity: 0 }, { opacity: 1, duration: 0.25, immediateRender: false }, 571.33);
+      tl.to("#cursor", { opacity: 0, duration: 0.3 }, 572.4);
+      tl.to("#cta-row", { y: 30, opacity: 0, duration: 0.4, ease: "power2.in" }, 575.0);
+
+      // ---------- end card 579.6 → 583.8 ----------
+      tl.fromTo("#end-bg", { clipPath: "circle(0% at 55% 40%)" }, { clipPath: "circle(150% at 55% 40%)", duration: 0.8, ease: "power2.inOut" }, 579.6);
+      tl.fromTo(["#end-c1", "#end-c2"], { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 1.0, ease, stagger: 0.1 }, 579.9);
+      tl.fromTo("#end-ring", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 1.6, ease }, 580.0);
+      tl.fromTo("#end-ring", { rotation: 0 }, { rotation: 30, duration: 3.8, ease: "none", immediateRender: false }, 580.0);
+      tl.fromTo("#endcard .ew", { yPercent: 110 }, { yPercent: 0, duration: 0.55, ease, stagger: 0.15 }, 580.2);
+      [["#cag1", 581.0], ["#cagd1", 581.25], ["#cag2", 581.35], ["#cagd2", 581.6], ["#cag3", 581.7]].forEach(([s, t]) => {
+        tl.fromTo(s, { scale: 1.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(2)" }, t);
+      });
+      tl.fromTo("#end-word", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease }, 582.1);
+      tl.fromTo("#end-site", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease }, 582.4);
+      tl.fromTo("#end-ul", { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease }, 582.7);
+
+      // ---------- small subtitles (seek-safe) ----------
+      const SUB_CUES = [{"t": "Hello!", "s": 0.22, "e": 1.13}, {"t": "For the past 12 years, I've worked as a", "s": 1.13, "e": 3.16}, {"t": "virtual assistant, a social media manager,", "s": 3.16, "e": 6.32}, {"t": "a content manager,", "s": 6.32, "e": 7.21}, {"t": "and executive VA.", "s": 7.21, "e": 10.64}, {"t": "And in this video, guys,", "s": 10.7, "e": 11.88}, {"t": "I will tell you some of the lessons I've", "s": 11.88, "e": 14.57}, {"t": "learned while I work from home.", "s": 14.57, "e": 17.62}, {"t": "And itong mga lesson na to,", "s": 17.78, "e": 18.96}, {"t": "pwedeng makatulong sa inyo,", "s": 18.96, "e": 21.06}, {"t": "or pwede rin hindi.", "s": 21.06, "e": 22.89}, {"t": "So, allow me to share my experiences,", "s": 22.89, "e": 26.21}, {"t": "kasi solid naman talaga,", "s": 26.21, "e": 28.55}, {"t": "12 years, guys.", "s": 28.55, "e": 31.26}, {"t": "So, baka makatulong sa inyo at ma-motivate", "s": 31.26, "e": 33.78}, {"t": "at ma-inspire kayo kapag na-receive nyo", "s": 33.78, "e": 36.5}, {"t": "itong mga lessons na to.", "s": 36.5, "e": 38.94}, {"t": "So, number one po na natutunan ko as a", "s": 38.94, "e": 41.54}, {"t": "virtual assistant is communication po is", "s": 41.54, "e": 45.15}, {"t": "very, very, very important.", "s": 45.15, "e": 48.43}, {"t": "Okay, tatlong very yun,", "s": 48.43, "e": 49.89}, {"t": "kasi importante talaga yun.", "s": 49.89, "e": 52.6}, {"t": "Knowing how to communicate sa mga clients,", "s": 52.8, "e": 55.0}, {"t": "for me, is the number one skill I think that", "s": 55.0, "e": 58.2}, {"t": "you will have to learn if you want to", "s": 58.2, "e": 60.66}, {"t": "survive in this field.", "s": 60.66, "e": 62.52}, {"t": "People doesn't just hire a VA because they", "s": 62.8, "e": 65.64}, {"t": "are good at tools or AI,", "s": 65.64, "e": 67.77}, {"t": "they are good at web", "s": 67.77, "e": 69.88}, {"t": "management.", "s": 70.0, "e": 71.5}, {"t": "No, they're actually hiring because they", "s": 71.76, "e": 73.9}, {"t": "want someone to talk to.", "s": 73.9, "e": 76.42}, {"t": "They're hiring because they need someone not", "s": 76.49, "e": 79.76}, {"t": "just to do the task, but doing executive", "s": 79.76, "e": 83.35}, {"t": "business decisions.", "s": 83.48, "e": 85.29}, {"t": "And kung ikaw, gusto mo silang tulungan,", "s": 85.54, "e": 88.04}, {"t": "yung mga clients online,", "s": 88.04, "e": 90.4}, {"t": "dapat marunong ka makipag-communicate.", "s": 90.4, "e": 92.63}, {"t": "Marunong ka magsabi ano yung mga nasa sa", "s": 92.86, "e": 95.28}, {"t": "loob mo, yung mga ideas mo,", "s": 95.28, "e": 97.87}, {"t": "para improve yung business nila,", "s": 97.87, "e": 99.6}, {"t": "hindi yung lagi ka nalang nakaantay kung ano", "s": 99.6, "e": 101.97}, {"t": "yung ipapagawa sa'yo,", "s": 101.97, "e": 103.92}, {"t": "or parang robot ka na, o ito,", "s": 103.96, "e": 105.74}, {"t": "gawin mo.", "s": 105.74, "e": 106.78}, {"t": "Hoy, Chad, ito, gawin mo.", "s": 106.78, "e": 108.96}, {"t": "Hindi dapat ganun.", "s": 108.96, "e": 109.98}, {"t": "Kasi yung ganun sistema ng VA,", "s": 109.98, "e": 112.62}, {"t": "noong 2013 pa yun, ngayong 2026 to 2027,", "s": 112.62, "e": 116.28}, {"t": "iba na ang labanan.", "s": 116.28, "e": 118.6}, {"t": "So, number two po is skill and experience", "s": 118.8, "e": 120.67}, {"t": "matter more than your degree.", "s": 120.67, "e": 123.16}, {"t": "Oo, kasi sa past 10 years,", "s": 123.16, "e": 125.58}, {"t": "okay, or past 12 years while working here,", "s": 125.58, "e": 129.94}, {"t": "parang never ako naka-encounter ng prospect", "s": 129.94, "e": 132.5}, {"t": "na tinatanong ako about my college degree.", "s": 132.5, "e": 136.06}, {"t": "Laging ang tanong nila is,", "s": 136.3, "e": 138.0}, {"t": "what you do for a living,", "s": 138.0, "e": 139.65}, {"t": "or tell me about yourself,", "s": 139.65, "e": 141.9}, {"t": "or what have you done for your clients,", "s": 141.9, "e": 143.88}, {"t": "or give me two or three people you've", "s": 143.88, "e": 146.87}, {"t": "helped, or send me a sample of your", "s": 146.87, "e": 149.27}, {"t": "portfolio, no?", "s": 149.27, "e": 150.58}, {"t": "Lalo na pag mga video editing,", "s": 150.58, "e": 152.48}, {"t": "no?", "s": 152.48, "e": 153.16}, {"t": "Mga funnel building, tinitingnan talaga,", "s": 153.16, "e": 155.03}, {"t": "ano yung mga nagawa mo.", "s": 155.03, "e": 157.05}, {"t": "So, wala yung tanong na saan ka ba nag-aral,", "s": 157.06, "e": 160.66}, {"t": "ano ba tinapos mo, or saan kolehiyo ka ba", "s": 160.66, "e": 163.04}, {"t": "nagtapos.", "s": 163.04, "e": 164.41}, {"t": "Dito, experience speaks louder than your", "s": 164.76, "e": 167.34}, {"t": "degree, okay?", "s": 167.34, "e": 169.08}, {"t": "So, yan.", "s": 169.42, "e": 170.66}, {"t": "Number three naman, you have to upskill", "s": 170.96, "e": 173.19}, {"t": "almost all the time.", "s": 173.19, "e": 175.54}, {"t": "I know this type of work is not for", "s": 175.54, "e": 177.05}, {"t": "everybody.", "s": 177.05, "e": 178.22}, {"t": "Tanggap natin yan.", "s": 178.22, "e": 179.26}, {"t": "Itong VA job, hindi ito lahat,", "s": 179.26, "e": 181.2}, {"t": "para sa lahat.", "s": 181.2, "e": 183.0}, {"t": "But, being a VA, if you really want to last", "s": 183.2, "e": 185.28}, {"t": "in this sport, you have to upskill almost", "s": 185.28, "e": 188.65}, {"t": "every time.", "s": 188.65, "e": 190.52}, {"t": "Hindi enough na marunong ka lang ng admin", "s": 190.79, "e": 192.52}, {"t": "tasks, or you can handle calls,", "s": 192.52, "e": 194.8}, {"t": "or you can speak good English,", "s": 194.8, "e": 197.0}, {"t": "or yung alam mo lang ngayon taon,", "s": 197.0, "e": 199.42}, {"t": "dun ka lang magfofocus.", "s": 199.42, "e": 202.09}, {"t": "No.", "s": 202.2, "e": 202.82}, {"t": "If you want to thrive, you need to upskill,", "s": 202.82, "e": 206.06}, {"t": "and when we talk of upskilling,", "s": 206.06, "e": 207.79}, {"t": "you have to do this all the time.", "s": 207.79, "e": 209.91}, {"t": "It's really a never-ending process of", "s": 210.25, "e": 212.16}, {"t": "learning, no?", "s": 212.16, "e": 213.68}, {"t": "A VA should always look for ways to become", "s": 213.76, "e": 215.87}, {"t": "better, and if you're not comfortable with", "s": 215.87, "e": 218.6}, {"t": "that,", "s": 218.6, "e": 219.68}, {"t": "well, this is not for you,", "s": 219.7, "e": 222.3}, {"t": "okay?", "s": 222.3, "e": 223.46}, {"t": "Maghanap ka na ng ibang business,", "s": 223.66, "e": 224.9}, {"t": "kasi mahihirapan kang mag-adjust,", "s": 224.9, "e": 227.35}, {"t": "no?", "s": 227.35, "e": 228.46}, {"t": "Kaya, pwede nyo mag-iba ng business,", "s": 228.88, "e": 231.3}, {"t": "or magtindahan ka, or ano.", "s": 231.3, "e": 233.83}, {"t": "Pero, if ikaw yung tao na tamad matuto,", "s": 233.83, "e": 237.88}, {"t": "hindi talaga ito para sa'yo.", "s": 237.88, "e": 240.52}, {"t": "So, yeah.", "s": 240.6, "e": 241.88}, {"t": "Number four.", "s": 241.98, "e": 243.22}, {"t": "Number four is, you have to surround", "s": 243.24, "e": 245.34}, {"t": "yourself with other successful VA or", "s": 245.34, "e": 247.69}, {"t": "freelancer like you.", "s": 247.69, "e": 249.74}, {"t": "If you want to succeed in this sport,", "s": 249.74, "e": 252.1}, {"t": "you have to surround yourself ng mga taong", "s": 252.1, "e": 254.95}, {"t": "susuporta rin sa'yo, okay?", "s": 254.95, "e": 257.22}, {"t": "Kasi, this is really hard,", "s": 257.22, "e": 259.46}, {"t": "especially in the beginning,", "s": 259.46, "e": 262.19}, {"t": "consuming all the knowledge", "s": 262.19, "e": 264.31}, {"t": "in the universe.", "s": 264.33, "e": 265.48}, {"t": "Sa pagyo-YouTube, sa Facebook,", "s": 265.48, "e": 266.94}, {"t": "ang dami mong makikita dyan.", "s": 266.94, "e": 269.04}, {"t": "So, kailangan mo talagang pumili ng mga", "s": 269.26, "e": 270.66}, {"t": "taong susuporta sa'yo at nakapapaligid", "s": 270.66, "e": 272.74}, {"t": "sa'yo, hindi lang yung mga kilala mong tao,", "s": 272.74, "e": 275.17}, {"t": "or yung mga kilala mong tao sa buhay mo.", "s": 275.17, "e": 278.04}, {"t": "Kailangan, kung gusto mong maging VA,", "s": 278.04, "e": 279.74}, {"t": "kailangan makipag-networking ka din sa ibang", "s": 279.74, "e": 282.97}, {"t": "tao na siguradong makakatulong sa'yo,", "s": 282.97, "e": 285.54}, {"t": "hindi yung magpo-put down sa'yo. So, yun.", "s": 285.54, "e": 289.12}, {"t": "That's number four.", "s": 289.12, "e": 290.78}, {"t": "And, let's go for number five.", "s": 291.02, "e": 293.23}, {"t": "Number five is, love your job,", "s": 293.23, "e": 295.44}, {"t": "but not the company.", "s": 295.44, "e": 297.98}, {"t": "Okay?", "s": 297.98, "e": 298.51}, {"t": "This is a hard rule.", "s": 298.51, "e": 300.62}, {"t": "I know some people might fight me on this,", "s": 300.64, "e": 303.69}, {"t": "or people have another opinion for this", "s": 303.69, "e": 306.82}, {"t": "topic", "s": 306.82, "e": 307.8}, {"t": "or this point, but always remember that", "s": 307.8, "e": 311.5}, {"t": "being on this sport, and siguro naman kahit", "s": 311.5, "e": 314.38}, {"t": "hindi VA, kahit dyan sa labas,", "s": 314.38, "e": 316.1}, {"t": "sa corporate pa, offline man yan,", "s": 316.1, "e": 318.1}, {"t": "or on-site, there will be always possibility", "s": 318.1, "e": 320.64}, {"t": "that you're going to be replaceable.", "s": 320.64, "e": 323.05}, {"t": "And one wrong move, or even kahit hindi ka", "s": 323.05, "e": 326.07}, {"t": "pa nagkakamali,", "s": 326.07, "e": 327.94}, {"t": "once the management decides na tanggalin ka,", "s": 328.2, "e": 330.74}, {"t": "you're going to be out.", "s": 330.74, "e": 333.29}, {"t": "At wala kang magagawa.", "s": 333.5, "e": 335.46}, {"t": "So, always love your job,", "s": 335.46, "e": 337.68}, {"t": "but become good at what you do,", "s": 337.68, "e": 340.23}, {"t": "but don't fall in love with your company.", "s": 340.23, "e": 343.12}, {"t": "Okay?", "s": 343.12, "e": 344.1}, {"t": "Always strive, upskill,", "s": 344.1, "e": 345.48}, {"t": "and have multiple jobs or clients at the", "s": 345.48, "e": 348.43}, {"t": "same time.", "s": 348.43, "e": 349.92}, {"t": "That is the real way to become good at this", "s": 349.92, "e": 353.01}, {"t": "sport.", "s": 353.01, "e": 354.3}, {"t": "Okay?", "s": 354.46, "e": 355.06}, {"t": "So, let's go with number six.", "s": 355.06, "e": 357.26}, {"t": "Number six, always have a backup plan.", "s": 357.26, "e": 361.52}, {"t": "Speaking of multiple clients or work,", "s": 361.7, "e": 364.22}, {"t": "a VA, after mong magka-work dito,", "s": 364.22, "e": 367.06}, {"t": "you have to always strive to have other", "s": 367.06, "e": 369.64}, {"t": "sources of income, hindi lang pag-VA,", "s": 369.64, "e": 372.41}, {"t": "okay?", "s": 372.41, "e": 373.44}, {"t": "So, kapag kumikita ka na,", "s": 373.44, "e": 374.82}, {"t": "don't just focus on your VA job as your", "s": 374.82, "e": 377.34}, {"t": "source of income.", "s": 377.34, "e": 379.12}, {"t": "Kasi pag wala ka ng clients mo,", "s": 379.12, "e": 381.28}, {"t": "paano lang buhay mo?", "s": 381.28, "e": 384.08}, {"t": "Nganga ka, di ba?", "s": 384.08, "e": 385.54}, {"t": "You have to find a way to build your own", "s": 385.58, "e": 387.56}, {"t": "business while you're still earning as a VA.", "s": 387.56, "e": 390.6}, {"t": "Kailangan sabayan mo.", "s": 390.6, "e": 392.04}, {"t": "Kailangan mag-isip ka pa ng ibang negosyo,", "s": 392.04, "e": 393.74}, {"t": "hindi lang yung VA job.", "s": 393.74, "e": 395.5}, {"t": "As I know it, no?", "s": 395.5, "e": 397.16}, {"t": "Kasi, a VA job can start a life,", "s": 397.16, "e": 400.41}, {"t": "okay?", "s": 400.41, "e": 401.64}, {"t": "But don't end it being just a VA.", "s": 401.64, "e": 404.66}, {"t": "Huwag kang mag-focus lang dyan.", "s": 404.76, "e": 406.84}, {"t": "Mag-build ka ng something na matatawag mong", "s": 406.86, "e": 408.9}, {"t": "sayo.", "s": 408.9, "e": 409.86}, {"t": "If you're already a VA,", "s": 409.86, "e": 411.26}, {"t": "start your own business cash flow.", "s": 411.26, "e": 415.5}, {"t": "And maybe this is the time for you, no?", "s": 415.81, "e": 418.42}, {"t": "Kasi syempre, pag-VA ka,", "s": 418.42, "e": 419.55}, {"t": "there will be cash flow.", "s": 419.55, "e": 421.04}, {"t": "There will be money.", "s": 421.04, "e": 422.48}, {"t": "Huwag masyadong todo-todo gastos,", "s": 422.62, "e": 424.86}, {"t": "todo-todo bakasyon.", "s": 424.86, "e": 426.76}, {"t": "Kailangan gamitin mo yung utak mo.", "s": 426.76, "e": 428.76}, {"t": "Gamitin mo yung pera na makikitain mo dito", "s": 428.76, "e": 430.5}, {"t": "to build other businesses.", "s": 430.5, "e": 432.85}, {"t": "Maybe a laundry shop or any kind of", "s": 432.85, "e": 434.64}, {"t": "something that you know,", "s": 434.64, "e": 436.28}, {"t": "any kind of business na dating gusto mong", "s": 436.28, "e": 438.36}, {"t": "i-build or a hobby na dating tinigil mo na", "s": 438.36, "e": 441.28}, {"t": "pwede mong pagkakitaan or mahilig ka sa", "s": 441.28, "e": 444.06}, {"t": "ukay, magtinda ka ng ukay or mag-build ka ng", "s": 444.06, "e": 446.9}, {"t": "coffee shop.", "s": 446.9, "e": 448.58}, {"t": "Basta yung something na yung gusto mo dating", "s": 448.68, "e": 450.62}, {"t": "i-build na business, dapat habang may pera", "s": 450.62, "e": 453.21}, {"t": "ka, mag-build ka ng ibang sources.", "s": 453.21, "e": 455.71}, {"t": "Kasi pag nawala yung VA job mo or humina", "s": 455.71, "e": 459.12}, {"t": "siya kasi dumarating yan, no?", "s": 459.12, "e": 462.12}, {"t": "Ang business naman kasi taas-baba yan.", "s": 462.12, "e": 463.98}, {"t": "At least meron kang ibang source of income,", "s": 463.98, "e": 466.4}, {"t": "no?", "s": 466.4, "e": 467.4}, {"t": "So, yun yung punto doon.", "s": 467.48, "e": 469.7}, {"t": "And number seven, the last point for this", "s": 469.7, "e": 472.12}, {"t": "video is that you have to save money and", "s": 472.12, "e": 475.43}, {"t": "invest, okay?", "s": 475.43, "e": 477.32}, {"t": "And this is a hard rule.", "s": 477.67, "e": 479.84}, {"t": "Walang makakaligtas dito,", "s": 480.22, "e": 481.89}, {"t": "okay?", "s": 481.89, "e": 483.08}, {"t": "Kasi majority ng mga VA ay once na kumita na", "s": 483.42, "e": 486.18}, {"t": "sila ng malaking pera, nakakalimot sila.", "s": 486.18, "e": 490.2}, {"t": "Nakakalimot sila na dati, nung nag-aaspire pa", "s": 490.3, "e": 494.07}, {"t": "lang silang mag-VA, na gusto nilang kumita para", "s": 494.07, "e": 496.88}, {"t": "makapagsave sila, para makainvest.", "s": 496.88, "e": 499.48}, {"t": "Nakakalimot sila.", "s": 499.48, "e": 500.86}, {"t": "Ginagawa na todo-todo yung gastos,", "s": 500.86, "e": 502.61}, {"t": "todo-todo labas ng bahay,", "s": 502.61, "e": 504.45}, {"t": "punta ng bakasyon.", "s": 504.45, "e": 506.0}, {"t": "At walang masama dun, eh.", "s": 506.0, "e": 507.49}, {"t": "Wala namang masama dun,", "s": 507.5, "e": 508.84}, {"t": "pero you have to think of the future din,", "s": 508.84, "e": 511.37}, {"t": "no?", "s": 511.37, "e": 511.99}, {"t": "You have to start saving,", "s": 511.99, "e": 513.08}, {"t": "you have to start investing.", "s": 513.08, "e": 515.08}, {"t": "Para during rainy days,", "s": 515.14, "e": 516.32}, {"t": "may pagkukunan ka, no?", "s": 516.32, "e": 518.68}, {"t": "So, yun naman po yung punto ko dun.", "s": 518.68, "e": 520.5}, {"t": "And ayaw kong pakialaman yung pera nyo,", "s": 520.5, "e": 522.92}, {"t": "eh.", "s": 522.92, "e": 523.76}, {"t": "Pero I'm just going to,", "s": 523.76, "e": 524.89}, {"t": "ano, parang, ano lang, honest advice lang po", "s": 524.89, "e": 528.57}, {"t": "para sa mga kapwa kong gustong mag-work from", "s": 528.57, "e": 530.95}, {"t": "home or sa mga nag-work from home na hindi", "s": 530.95, "e": 533.85}, {"t": "laging nandyan yung blessing.", "s": 533.85, "e": 536.64}, {"t": "Merong times na tutumal yan,", "s": 537.15, "e": 539.12}, {"t": "at merong times na babagal yung kita mo.", "s": 539.12, "e": 543.28}, {"t": "So, you have to start saving money and", "s": 543.28, "e": 545.75}, {"t": "investing para lagi kang prepare.", "s": 545.75, "e": 548.46}, {"t": "Always prepare your emergency fund.", "s": 548.46, "e": 550.97}, {"t": "Always prepare yung pera mo,", "s": 550.97, "e": 552.76}, {"t": "isave mo yan.", "s": 552.76, "e": 554.3}, {"t": "Wag sobra-sobra yung gastos.", "s": 554.3, "e": 556.96}, {"t": "So, yun lang po.", "s": 557.18, "e": 558.53}, {"t": "Yun lang po yung aking advice sa inyo,", "s": 558.58, "e": 561.21}, {"t": "yung mga lessons na natutunan ko.", "s": 561.21, "e": 562.9}, {"t": "And I hope you get something from this.", "s": 562.9, "e": 565.16}, {"t": "And if you get something from this,", "s": 565.16, "e": 567.28}, {"t": "may value ito sa inyo.", "s": 567.28, "e": 569.26}, {"t": "Don't forget to like the video.", "s": 569.26, "e": 571.08}, {"t": "And subscribe to my channel for more", "s": 571.16, "e": 572.54}, {"t": "information po about working from home.", "s": 572.54, "e": 575.4}, {"t": "And see you on my next video.", "s": 575.42, "e": 578.02}, {"t": "Salamat po. Thank you.", "s": 578.02, "e": 579.6}];
+      const SUB_HIDE = [[26.0, 30.4], [90.3, 92.8], [164.7, 168.6], [233.7, 239.6], [252.6, 256.9], [320.6, 324.3], [335.4, 342.8], [397.1, 404.4], [409.8, 414.6], [480.1, 482.4], [515.0, 518.2], [548.3, 551.0]];
+      const subEl = document.getElementById("sub-text");
+      const subProxy = { t: 0 };
+      let subLast = null;
+      tl.fromTo(subProxy, { t: 0 }, {
+        t: 579.6, duration: 579.6, ease: "none",
+        onUpdate: () => {
+          const t = subProxy.t;
+          let cue = null;
+          if (!SUB_HIDE.some(([a, b]) => t >= a && t < b)) cue = SUB_CUES.find(c => t >= c.s && t < c.e) || null;
+          if (cue !== subLast) {
+            subLast = cue;
+            subEl.textContent = cue ? cue.t : "";
+            subEl.style.opacity = cue ? 1 : 0;
+          }
+        }
+      }, 0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

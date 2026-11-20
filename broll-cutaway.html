@@ -1,0 +1,173 @@
+<!--
+  B-roll cutaways v2 (2026-10-19) — dynamic. Two kinds:
+    A) PHOTO cutaway — full-frame web image over the creator while he keeps talking.
+       brollCut(id, inAt, outAt, { enter, move, exit, label })
+         enter: "slide-l" | "slide-r" | "punch" | "split"   (rotate — never the same twice in a row)
+         move:  "push" | "pull" | "pan-l" | "pan-r"           (Ken Burns during the hold; vary it too)
+         exit:  "slide-l" | "slide-r" | "drop" | "fade"       (default: matches the enter direction)
+    B) SHOT cutaway — browser screenshot / evidence on the pale backdrop, with a fact callout,
+       a camera push into the key spot and a highlighter on it.
+       brollShot(id, inAt, outAt, { box, zoom, hl, fact })
+         box:  [left, top, width, height] in % of the screenshot — the key number/line.
+               Same numbers as the .hl inline style. The camera zooms toward its center.
+         zoom: wanted zoom (default 1.7). Auto-capped so the whole box stays inside the
+               card (×0.92 margin) — a full-width line of text gets almost no zoom, a small
+               number gets a big push. Keep boxes tight: just the key phrase, not the paragraph.
+         hl:   true when the shot has a .hl highlighter element
+         fact: true when the clip has a .fact callout
+
+  Timing (The creator 2026-10-19: "some B-rolls show so fast"):
+    PHOTO 3.5–4.5 s, SHOT 5–6 s. Start at key word − 0.2 s; end at the end of the creator's phrase
+    (next comma/period in the word timings), not at a fixed length. Never shorter than 3 s.
+
+  Stacking: every .broll clip goes in the DOM right AFTER the #cam wrapper (above the footage,
+  below captions/subtitles/chapter tags/progress — #subs/#progress are z-index 20). Track 12.
+  Never during the first ~10 s, the CTA, or an emotional line delivered to camera.
+
+  Seek-safe: one paused timeline, transforms + opacity only, no measuring at tween time,
+  focus points are hand-set percentages (read them off the screenshot), no querySelector
+  with template literals (the bundler rejects them) — pass flags instead.
+-->
+
+<!-- 1) CSS (inside <style>) -->
+<style>
+  .broll { z-index: 2; }
+  .broll .frame { position: absolute; inset: 0; overflow: hidden; background: #0b2058; }
+  .broll .img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* split enter: two halves of the same image slam together */
+  .broll .half { position: absolute; left: 0; width: 100%; height: 50%; overflow: hidden; }
+  .broll .half.top { top: 0; }
+  .broll .half.bot { top: 50%; }
+  .broll .half .img { height: 200%; }
+  .broll .half.bot .img { top: -100%; }
+  .broll .seam { position: absolute; left: 0; right: 0; top: calc(50% - 3px); height: 6px; background: #3882f6; opacity: 0; }
+  .broll .shade { position: absolute; left: 0; right: 0; bottom: 0; height: 260px; background: linear-gradient(to top, rgba(11, 32, 88, 0.75), rgba(11, 32, 88, 0)); }
+  .broll .label { position: absolute; right: 56px; top: 48px; background: rgba(11, 32, 88, 0.92); border-radius: 12px; padding: 10px 20px; font-family: "Montserrat", Arial, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: 0.12em; color: #ffffff; text-transform: uppercase; }
+  .broll .credit { position: absolute; right: 56px; bottom: 16px; font-family: "Montserrat", Arial, sans-serif; font-weight: 500; font-size: 13px; color: rgba(255, 255, 255, 0.85); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+
+  /* SHOT cutaway */
+  .broll .frame.paper { background: #eaf3ff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; padding-bottom: 80px; }
+  .broll .frame.paper .credit { color: rgba(11, 32, 88, 0.7); text-shadow: none; }
+  .broll .fact { font-family: "Poppins", Arial, sans-serif; font-weight: 800; font-size: 60px; line-height: 1.1; color: #0b2058; text-align: center; }
+  .broll .fact b { color: #2563eb; }
+  .broll .shot { position: relative; overflow: hidden; border-radius: 18px; border: 6px solid #ffffff; box-shadow: 0 24px 60px rgba(11, 32, 88, 0.35); line-height: 0; background: #ffffff; }
+  .broll .shot .zoom { position: relative; }
+  .broll .shot img { display: block; max-width: 1560px; max-height: 640px; }
+  /* highlighter: position in % of the screenshot over the key number/line */
+  .broll .hl { position: absolute; background: rgba(255, 214, 0, 0.5); mix-blend-mode: multiply; border-radius: 6px; transform-origin: 0% 50%; }
+</style>
+
+<!-- 2) HTML (inside #root, right after the #cam wrapper) -->
+
+<!-- A) PHOTO — normal (slide / punch enters) -->
+<div id="br-data-entry" class="clip broll" data-start="7.52" data-duration="4.1" data-track-index="12">
+  <div class="frame">
+    <img class="img" src="assets/broll/data-entry.jpg" alt="Hands typing on a spreadsheet" />
+    <div class="shade"></div>
+    <span class="label">Data entry</span>
+    <span class="credit">Photo: Unsplash</span>
+  </div>
+</div>
+
+<!-- A) PHOTO — split enter: same image twice, in .half.top / .half.bot -->
+<div id="br-startup" class="clip broll" data-start="29.62" data-duration="4.3" data-track-index="12">
+  <div class="frame">
+    <div class="half top"><img class="img" src="assets/broll/startup-team.jpg" alt="" /></div>
+    <div class="half bot"><img class="img" src="assets/broll/startup-team.jpg" alt="Small start-up team" /></div>
+    <div class="seam"></div>
+    <div class="shade"></div>
+    <span class="label">Start-ups</span>
+    <span class="credit">Photo: Unsplash</span>
+  </div>
+</div>
+
+<!-- B) SHOT — fact callout + screenshot + highlighter (left/top/width/height in % of the screenshot) -->
+<div id="br-onlinejobs" class="clip broll" data-start="62.80" data-duration="5.6" data-track-index="12">
+  <div class="frame paper">
+    <span class="fact"><b>288</b> AI VA jobs on OnlineJobs.ph today</span>
+    <div class="shot">
+      <div class="zoom">
+        <img src="assets/broll/onlinejobs-ai-va.png" alt="OnlineJobs.ph search results for AI virtual assistant" />
+        <div class="hl" style="left: 25.2%; top: 31.5%; width: 15.4%; height: 5.6%"></div>
+      </div>
+    </div>
+    <span class="credit">Screenshot: onlinejobs.ph, Oct 19 2026</span>
+  </div>
+</div>
+
+<!-- 3) JS (inside the timeline script, before window.__timelines registration) -->
+<script>
+  const BR_W = 1920, BR_H = 1080;
+
+  function brollCut(id, inAt, outAt, o = {}) {
+    const enter = o.enter || "punch", move = o.move || "push";
+    const exit = o.exit || (enter === "slide-l" ? "slide-l" : enter === "slide-r" ? "slide-r" : enter === "split" ? "drop" : "fade");
+    const hold = outAt - inAt;
+    const imgs = enter === "split" ? `${id} .half .img` : `${id} .img`;
+
+    // ENTER (0.45–0.55 s)
+    if (enter === "slide-l" || enter === "slide-r") {
+      const from = enter === "slide-l" ? BR_W : -BR_W; // slide-l travels right→left
+      tl.fromTo(`${id} .frame`, { x: from }, { x: 0, duration: 0.5, ease: "expo.out" }, inAt);
+    } else if (enter === "punch") {
+      tl.fromTo(`${id} .frame`, { scale: 1.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.6)" }, inAt);
+    } else if (enter === "split") {
+      tl.fromTo(`${id} .half.top`, { y: -BR_H / 2 }, { y: 0, duration: 0.5, ease: "power4.out" }, inAt);
+      tl.fromTo(`${id} .half.bot`, { y: BR_H / 2 }, { y: 0, duration: 0.5, ease: "power4.out" }, inAt);
+      tl.fromTo(`${id} .seam`, { opacity: 1, scaleX: 1 }, { opacity: 0, scaleX: 0.2, duration: 0.35, ease: "power2.in" }, inAt + 0.45);
+    }
+
+    // MOVE during the hold (Ken Burns, varied)
+    const mv = {
+      "push":  [{ scale: 1.04, xPercent: 0 }, { scale: 1.16, xPercent: 0 }],
+      "pull":  [{ scale: 1.18, xPercent: 0 }, { scale: 1.04, xPercent: 0 }],
+      "pan-l": [{ scale: 1.12, xPercent: 3 },  { scale: 1.12, xPercent: -3 }],
+      "pan-r": [{ scale: 1.12, xPercent: -3 }, { scale: 1.12, xPercent: 3 }],
+    }[move];
+    tl.fromTo(imgs, mv[0], { ...mv[1], duration: hold, ease: "sine.inOut" }, inAt);
+
+    if (o.label) {
+      tl.fromTo(`${id} .label`, { x: 60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, inAt + 0.3);
+    }
+
+    // EXIT (0.35–0.4 s)
+    if (exit === "slide-l" || exit === "slide-r") {
+      tl.to(`${id} .frame`, { x: exit === "slide-l" ? -BR_W : BR_W, duration: 0.4, ease: "expo.in", immediateRender: false }, outAt - 0.4);
+    } else if (exit === "drop") {
+      tl.to(`${id} .frame`, { y: BR_H, duration: 0.4, ease: "power3.in", immediateRender: false }, outAt - 0.4);
+    } else {
+      tl.to(`${id} .frame`, { opacity: 0, scale: 1.04, duration: 0.35, ease: "power1.in", immediateRender: false }, outAt - 0.35);
+    }
+  }
+
+  function brollShot(id, inAt, outAt, o = {}) {
+    const [bl, bt, bw, bh] = o.box || [40, 40, 20, 20];
+    const fx = bl + bw / 2, fy = bt + bh / 2;
+    // scaling around the box center keeps that center fixed; the box grows to bw*zoom.
+    // Cap so both edges stay inside the card: zoom <= 2*min(dist to edge)/size, with margin.
+    const zMax = 0.92 * Math.min((2 * fx) / bw, (2 * (100 - fx)) / bw, (2 * fy) / bh, (2 * (100 - fy)) / bh);
+    const zoom = Math.max(1.05, Math.min(o.zoom || 1.7, zMax));
+    // backdrop + card in
+    tl.fromTo(`${id} .frame`, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, inAt);
+    tl.fromTo(`${id} .shot`, { y: 120, scale: 0.88, rotation: -2 }, { y: 0, scale: 1, rotation: 0, duration: 0.6, ease: "back.out(1.4)" }, inAt);
+    if (o.fact) {
+      tl.fromTo(`${id} .fact`, { y: -30, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.8)" }, inAt + 0.25);
+    }
+    // camera push into the key spot: scale around the focus point (transform-origin = focus)
+    tl.set(`${id} .zoom`, { transformOrigin: `${fx}% ${fy}%` }, inAt);
+    tl.fromTo(`${id} .zoom`, { scale: 1 }, { scale: zoom, duration: 1.3, ease: "power3.inOut", immediateRender: false }, inAt + 1.0);
+    // highlighter sweep once the zoom lands
+    if (o.hl) {
+      tl.fromTo(`${id} .hl`, { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power2.out" }, inAt + 2.3);
+    }
+    // slow settle, then out
+    tl.to(`${id} .zoom`, { scale: zoom * 1.04, duration: Math.max(0.5, outAt - inAt - 2.8), ease: "sine.inOut", immediateRender: false }, inAt + 2.3);
+    tl.to(`${id} .shot`, { y: -60, scale: 0.94, duration: 0.35, ease: "power2.in", immediateRender: false }, outAt - 0.35);
+    tl.to(`${id} .frame`, { opacity: 0, duration: 0.3, ease: "power1.in", immediateRender: false }, outAt - 0.3);
+  }
+
+  brollCut("#br-data-entry", 7.52, 11.62, { enter: "slide-l", move: "push", label: true });
+  brollCut("#br-startup", 29.62, 33.92, { enter: "split", move: "pan-r", label: true });
+  brollShot("#br-onlinejobs", 62.80, 68.40, { box: [25.2, 31.5, 15.4, 5.6], zoom: 1.7, hl: true, fact: true });
+</script>
+<!-- SFX: whoosh (0.25) on slide enters, a clean hit/pop (0.3) on punch and split, a soft pop (0.25) when the highlighter lands -->

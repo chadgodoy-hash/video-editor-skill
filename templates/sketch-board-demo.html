@@ -1,0 +1,161 @@
+<!doctype html>
+<!--
+  SKETCH BOARD — "invisible pen" drawing explainer (The creator's request 2026-10-19; reference: torn paper on the left,
+  presenter shifted right, red heading + black handwriting + hand-drawn shapes drawing themselves).
+  Standalone 11 s demo built on the Hard Lessons footage (rendered: projects/Video editing projects/Sketch board demo.mp4).
+  Copy into a composition: the "Sketch board" CSS block, one .clip.sketch per board, and the "Sketch helpers" JS
+  (rng, tornEdge, wobble, sk.*, setPath, sketchIn, sketchOut, write, draw). Text = .ink spans (add .red / .blue);
+  shapes = empty <path> elements whose d is generated at load by sk.line/rect/ellipse/arrowShaft/arrowHead/check/bubble.
+-->
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Gochi Hand"; font-weight: 400; src: url("assets/fonts/gochi-hand-latin-400-normal.woff2") format("woff2"); }
+      @font-face { font-family: "Caveat"; font-weight: 700; src: url("assets/fonts/caveat-latin-700-normal.woff2") format("woff2"); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      .clip { position: absolute; inset: 0; pointer-events: none; }
+      #cam { position: absolute; inset: 0; transform-origin: 1040px 450px; overflow: hidden; }
+
+      /* ===== Sketch board (torn paper + invisible-pen writing) ===== */
+      :root { --ink: #1c1c1c; --ink-red: #c8102e; --ink-blue: #2563eb; --paper: #f7f6f2; }
+      .sketch .sheet { position: absolute; left: 0; top: 0; width: 1180px; height: 1080px; }
+      .sketch .edge, .sketch .paper { position: absolute; inset: 0; }
+      .sketch .edge { background: #dcd8cf; filter: drop-shadow(6px 0 10px rgba(0, 0, 0, 0.35)); }
+      .sketch .paper { background: var(--paper); }
+      .sketch .grain { position: absolute; inset: 0; opacity: 0.55; mix-blend-mode: multiply; }
+      .sketch .ink { position: absolute; display: block; white-space: nowrap; font-family: "Gochi Hand", "Caveat", cursive; color: var(--ink); line-height: 1.1; }
+      .sketch .ink.red { color: var(--ink-red); }
+      .sketch .ink.blue { color: var(--ink-blue); }
+      .sketch svg.draw { position: absolute; left: 0; top: 0; overflow: visible; }
+      .sketch svg.draw path { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="11" data-width="1920" data-height="1080">
+      <div id="cam">
+        <video id="a-roll" class="clip" src="footage.mp4" playsinline data-start="0" data-duration="11" data-track-index="0"
+          style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover" data-has-audio="true"></video>
+      </div>
+
+      <audio id="sfx-01" src="assets/sfx/whoosh-3.wav" data-start="0.0" data-duration="0.43" data-volume="0.3" data-track-index="9"></audio>
+      <audio id="sfx-p01" src="assets/sfx/pencil-rev.wav" data-start="1.25" data-duration="0.4" data-volume="0.15" data-track-index="10"></audio> <!-- pencil: underline (drawings only) -->
+      <audio id="sfx-p02" src="assets/sfx/pencil.wav" data-start="4.5" data-duration="0.75" data-volume="0.15" data-track-index="11"></audio> <!-- pencil: circle (drawings only) -->
+      <audio id="sfx-p03" src="assets/sfx/pencil-rev.wav" data-start="5.4" data-duration="0.95" data-volume="0.15" data-track-index="10"></audio> <!-- pencil: bubble (drawings only) -->
+      <audio id="sfx-p04" src="assets/sfx/pencil.wav" data-start="6.3" data-duration="0.5" data-volume="0.15" data-track-index="11"></audio> <!-- pencil: dots (drawings only) -->
+      <audio id="sfx-p05" src="assets/sfx/pencil-rev.wav" data-start="7.6" data-duration="0.7" data-volume="0.15" data-track-index="10"></audio> <!-- pencil: arrow (drawings only) -->
+      <audio id="sfx-p06" src="assets/sfx/pencil.wav" data-start="9.6" data-duration="0.4" data-volume="0.15" data-track-index="11"></audio> <!-- pencil: check (drawings only) -->
+      <audio id="sfx-06" src="assets/sfx/whoosh-2.wav" data-start="10.35" data-duration="0.23" data-volume="0.22" data-track-index="9"></audio>
+
+      <!-- Sketch board 0 → 10.8 -->
+      <div id="sk1" class="clip sketch" data-start="0" data-duration="10.8" data-track-index="1">
+        <div class="sheet">
+          <div class="edge"></div>
+          <div class="paper">
+            <svg class="grain" width="1180" height="1080"><filter id="sk-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="4" /><feColorMatrix values="0 0 0 0 0.55  0 0 0 0 0.53  0 0 0 0 0.5  0 0 0 0.35 0" /></filter><rect width="1180" height="1080" filter="url(#sk-grain)" /></svg>
+            <span class="ink red" id="sk1-t1" style="left: 150px; top: 120px; font-size: 92px;">Lesson 1</span>
+            <span class="ink" id="sk1-t2" style="left: 110px; top: 300px; font-size: 64px;">Communicate with</span>
+            <span class="ink" id="sk1-t3" style="left: 110px; top: 380px; font-size: 64px;">your clients</span>
+            <span class="ink" id="sk1-t4" style="left: 110px; top: 500px; font-size: 96px;">= the #1 skill</span>
+            <span class="ink" id="sk1-t5" style="left: 110px; top: 800px; font-size: 64px;">survive in this field</span>
+            <svg class="draw" width="1180" height="1080">
+              <path id="sk1-u1" stroke="#c8102e" />
+              <path id="sk1-c1" stroke="#c8102e" />
+              <path id="sk1-b1" stroke="#1c1c1c" />
+              <path id="sk1-b2" stroke="#1c1c1c" />
+              <path id="sk1-a1" stroke="#1c1c1c" />
+              <path id="sk1-a2" stroke="#1c1c1c" />
+              <path id="sk1-k1" stroke="#c8102e" stroke-width="7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // ===== Sketch helpers (deterministic: seeded RNG, built at load) =====
+      function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+      // jagged torn right edge, applied as clip-path to .edge (wider) and .paper
+      function tornEdge(sel, W, seed, extra) {
+        const r = rng(seed); const pts = ["0px 0px"];
+        for (let y = 0; y <= 1080; y += 9) {
+          const x = W + extra + Math.sin(y / 70 + seed) * 10 + (r() - 0.5) * 22;
+          pts.push(`${x.toFixed(1)}px ${y}px`);
+        }
+        pts.push("0px 1080px");
+        document.querySelectorAll(sel).forEach(el => el.style.clipPath = `polygon(${pts.join(",")})`);
+      }
+      // hand-drawn line through points with small wobble
+      function wobble(points, seed, amt = 3) {
+        const r = rng(seed); let d = "";
+        points.forEach(([x, y], i) => {
+          const jx = x + (r() - 0.5) * amt, jy = y + (r() - 0.5) * amt;
+          if (i === 0) d += `M${jx.toFixed(1)} ${jy.toFixed(1)}`;
+          else {
+            const [px, py] = points[i - 1];
+            const mx = (px + x) / 2 + (r() - 0.5) * amt * 2, my = (py + y) / 2 + (r() - 0.5) * amt * 2;
+            d += ` Q${mx.toFixed(1)} ${my.toFixed(1)} ${jx.toFixed(1)} ${jy.toFixed(1)}`;
+          }
+        });
+        return d;
+      }
+      const sk = {
+        line: (x1, y1, x2, y2, seed) => wobble([[x1, y1], [(x1 + x2) / 2, (y1 + y2) / 2 + 3], [x2, y2]], seed),
+        rect: (x, y, w, h, seed) => wobble([[x + 6, y - 4], [x + w, y], [x + w + 3, y + h], [x, y + h + 2], [x - 2, y + 2], [x + 18, y - 6]], seed, 5),
+        ellipse: (cx, cy, rx, ry, seed) => { const p = []; for (let i = 0; i <= 26; i++) { const a = -2.2 + (i / 24) * Math.PI * 2; const k = 1 + i * 0.004; p.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]); } return wobble(p, seed, 4); },
+        arrowShaft: (pts, seed) => wobble(pts, seed, 3),
+        arrowHead: (x, y, ang, seed, len = 28) => { const a1 = ang + 2.6, a2 = ang - 2.6; return wobble([[x + Math.cos(a1) * len, y + Math.sin(a1) * len], [x, y], [x + Math.cos(a2) * len, y + Math.sin(a2) * len]], seed, 2); },
+        check: (x, y, s, seed) => wobble([[x, y], [x + s * 0.35, y + s * 0.4], [x + s, y - s * 0.55]], seed, 2),
+        bubble: (x, y, w, h, seed) => { const p = []; for (let i = 0; i <= 22; i++) { const a = Math.PI * 0.62 + (i / 22) * Math.PI * 1.85; p.push([x + w / 2 + Math.cos(a) * w / 2, y + h / 2 + Math.sin(a) * h / 2]); } p.push([x + w * 0.22, y + h + 46], [x + w * 0.36, y + h * 0.96]); return wobble(p, seed, 4); }
+      };
+      function setPath(id, d) { const el = document.getElementById(id); el.setAttribute("d", d); el.setAttribute("pathLength", "1"); el.setAttribute("stroke-dasharray", "1"); el.setAttribute("stroke-dashoffset", "1"); }
+      // board in: paper slides from the left while the camera shifts the creator right
+      function sketchIn(id, t, camShift = 420) {
+        tl.fromTo(`${id} .sheet`, { x: -1220 }, { x: 0, duration: 0.6, ease: "power3.out" }, t);
+        tl.fromTo("#cam", { x: 0 }, { x: camShift, duration: 0.6, ease: "power3.out", immediateRender: false }, t);
+      }
+      function sketchOut(id, t, camShift = 420) {
+        tl.to(`${id} .sheet`, { x: -1220, duration: 0.45, ease: "power2.in" }, t - 0.45);
+        tl.fromTo("#cam", { x: camShift }, { x: 0, duration: 0.45, ease: "power2.in", immediateRender: false }, t - 0.45);
+      }
+      // invisible pen: wipe the text in left→right at handwriting speed
+      function write(sel, t, cps = 16) {
+        const n = document.querySelector(sel).textContent.length;
+        tl.fromTo(sel, { clipPath: "inset(-20% 100% -20% 0%)" }, { clipPath: "inset(-20% 0% -20% 0%)", duration: Math.max(0.35, n / cps), ease: "none" }, t);
+      }
+      function draw(sel, t, dur = 0.6) { tl.fromTo(sel, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: dur, ease: "power1.inOut" }, t); }
+
+      // ===== Demo board =====
+      tornEdge("#sk1 .paper", 1150, 3, 0);
+      tornEdge("#sk1 .edge", 1150, 3, 7);
+      setPath("sk1-u1", sk.line(150, 228, 470, 222, 11));
+      setPath("sk1-c1", sk.ellipse(392, 560, 68, 52, 12));
+      setPath("sk1-b1", sk.bubble(740, 280, 330, 190, 13));
+      setPath("sk1-b2", "M842 378 m-4 0 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0 M905 378 m-4 0 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0 M968 378 m-4 0 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0");
+      setPath("sk1-a1", sk.arrowShaft([[300, 640], [270, 700], [250, 780]], 14));
+      setPath("sk1-a2", sk.arrowHead(250, 780, Math.atan2(80, -20), 15));
+      setPath("sk1-k1", sk.check(650, 845, 60, 16));
+      sketchIn("#sk1", 0);
+      write("#sk1-t1", 0.5, 12);
+      draw("#sk1-u1", 1.25, 0.4);
+      write("#sk1-t2", 1.0 + 0.6, 18);
+      write("#sk1-t3", 2.5, 18);
+      write("#sk1-t4", 3.4, 14);
+      draw("#sk1-c1", 4.5, 0.7);
+      draw("#sk1-b1", 5.4, 0.9);
+      draw("#sk1-b2", 6.3, 0.5);
+      draw("#sk1-a1", 7.6, 0.45);
+      draw("#sk1-a2", 8.05, 0.25);
+      write("#sk1-t5", 8.3, 18);
+      draw("#sk1-k1", 9.6, 0.35);
+      sketchOut("#sk1", 10.8);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
